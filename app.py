@@ -1733,6 +1733,24 @@ def home():
         "index.html"
     )
 
+# ============================================================
+# SEPARATE WEBSITE PAGES
+# ============================================================
+
+@app.route("/early-warning")
+def early_warning():
+    return render_template("early-warning.html")
+
+
+@app.route("/sources")
+def sources():
+    return render_template("sources.html")
+
+
+@app.route("/about")
+def about():
+    return render_template("about.html")
+
 
 # ============================================================
 # HEALTH

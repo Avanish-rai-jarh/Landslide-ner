@@ -1108,6 +1108,188 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
 
 
         // ====================================================
+        // NER STATE HELPERS
+        // ====================================================
+
+        const NER_STATES = [
+            "Arunachal Pradesh",
+            "Assam",
+            "Manipur",
+            "Meghalaya",
+            "Mizoram",
+            "Nagaland",
+            "Sikkim",
+            "Tripura"
+        ];
+
+
+        const NER_STATE_CODES = {
+            "IN-AR": "Arunachal Pradesh",
+            "IN-AS": "Assam",
+            "IN-MN": "Manipur",
+            "IN-ML": "Meghalaya",
+            "IN-MZ": "Mizoram",
+            "IN-NL": "Nagaland",
+            "IN-SK": "Sikkim",
+            "IN-TR": "Tripura"
+        };
+
+
+        function normalizeNERState(value) {
+
+            if (!value) {
+                return null;
+            }
+
+            const text = String(value)
+                .trim()
+                .toLowerCase()
+                .replace(/\s+/g, " ");
+
+            for (const state of NER_STATES) {
+                if (state.toLowerCase() === text) {
+                    return state;
+                }
+            }
+
+            const aliases = {
+                "arunachal": "Arunachal Pradesh",
+                "arunachal pradesh": "Arunachal Pradesh",
+                "assam": "Assam",
+                "manipur": "Manipur",
+                "meghalaya": "Meghalaya",
+                "mizoram": "Mizoram",
+                "nagaland": "Nagaland",
+                "sikkim": "Sikkim",
+                "tripura": "Tripura"
+            };
+
+            return aliases[text] || null;
+        }
+
+
+        // ====================================================
+        // BROWSER-SIDE NOMINATIM LOCATION SEARCH
+        // ====================================================
+
+        const BROWSER_LOCATION_CACHE = new Map();
+        let LAST_LOCATION_REQUEST = 0;
+
+
+        async function searchLocationFromBrowser(query) {
+
+            const cacheKey = String(query).trim().toLowerCase();
+            const cached = BROWSER_LOCATION_CACHE.get(cacheKey);
+
+            if (cached) {
+                return cached;
+            }
+
+            const elapsed = Date.now() - LAST_LOCATION_REQUEST;
+            const wait = 1200 - elapsed;
+
+            if (wait > 0) {
+                await new Promise(function (resolve) {
+                    setTimeout(resolve, wait);
+                });
+            }
+
+            LAST_LOCATION_REQUEST = Date.now();
+
+            const url =
+                "https://nominatim.openstreetmap.org/search" +
+                "?format=jsonv2" +
+                "&addressdetails=1" +
+                "&countrycodes=in" +
+                "&limit=5" +
+                "&q=" + encodeURIComponent(query);
+
+            const response = await fetch(url, {
+                method: "GET",
+                headers: {
+                    "Accept": "application/json"
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(
+                    "Location search service returned HTTP " +
+                    response.status + ". Please try again."
+                );
+            }
+
+            const results = await response.json();
+
+            if (!Array.isArray(results) || results.length === 0) {
+                throw new Error(
+                    "Location not found. Try a city, district or state in Northeast India."
+                );
+            }
+
+            let selected = null;
+
+            for (const item of results) {
+                const address = item.address || {};
+                const code = String(
+                    address["ISO3166-2-lvl4"] ||
+                    address["ISO3166-2-lvl3"] ||
+                    ""
+                ).toUpperCase();
+
+                const state =
+                    normalizeNERState(address.state) ||
+                    NER_STATE_CODES[code] ||
+                    normalizeNERState(address.state_district);
+
+                if (state) {
+                    selected = {
+                        latitude: Number(item.lat),
+                        longitude: Number(item.lon),
+                        display_name: item.display_name || query,
+                        state: state,
+                        supported: true
+                    };
+                    break;
+                }
+            }
+
+            if (!selected) {
+                const first = results[0];
+                const address = first.address || {};
+                const code = String(
+                    address["ISO3166-2-lvl4"] ||
+                    address["ISO3166-2-lvl3"] ||
+                    ""
+                ).toUpperCase();
+
+                const state =
+                    normalizeNERState(address.state) ||
+                    NER_STATE_CODES[code] ||
+                    normalizeNERState(address.state_district);
+
+                selected = {
+                    latitude: Number(first.lat),
+                    longitude: Number(first.lon),
+                    display_name: first.display_name || query,
+                    state: state,
+                    supported: Boolean(state)
+                };
+            }
+
+            if (
+                !Number.isFinite(selected.latitude) ||
+                !Number.isFinite(selected.longitude)
+            ) {
+                throw new Error("Location search returned invalid coordinates.");
+            }
+
+            BROWSER_LOCATION_CACHE.set(cacheKey, selected);
+
+            return selected;
+        }
+
+
+        // ====================================================
         // BROWSER-SIDE OPEN-METEO RAINFALL
         // ====================================================
 
@@ -1414,7 +1596,8 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
 
         async function predict(
             lat,
-            lon
+            lon,
+            state = null
         ) {
 
             setStatus(
@@ -1501,6 +1684,9 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
 
                                     longitude:
                                         lon,
+
+                                    state:
+                                        state,
 
                                     weather:
                                         weather
@@ -1684,247 +1870,98 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
                     ? input.value.trim()
                     : "";
 
-
-            // -----------------------------------------------
-            // EMPTY SEARCH
-            // -----------------------------------------------
-
             if (!query) {
-
-                setStatus(
-                    "Please enter a location."
-                );
-
+                setStatus("Please enter a location.");
                 if (input) {
                     input.focus();
                 }
-
                 return;
-
             }
-
-
-            // -----------------------------------------------
-            // BUTTON STATE
-            // -----------------------------------------------
 
             if (searchButton) {
-
-                searchButton.disabled =
-                    true;
-
-                searchButton.textContent =
-                    "Searching...";
-
+                searchButton.disabled = true;
+                searchButton.textContent = "Searching...";
             }
 
-
-            setStatus(
-                `Searching for "${query}"...`
-            );
-
+            setStatus(`Searching for "${query}"...`);
 
             try {
 
-                // -------------------------------------------
-                // LOCATION SEARCH REQUEST
-                // -------------------------------------------
+                // Search directly from the visitor's browser.
+                // This avoids Render -> Nominatim server-side failures.
+                const result =
+                    await searchLocationFromBrowser(query);
 
-                const response =
-                    await fetch(
-                        "/search-location",
-                        {
+                const lat = Number(result.latitude);
+                const lon = Number(result.longitude);
+                const state = normalizeNERState(result.state);
 
-                            method:
-                                "POST",
-
-                            headers: {
-
-                                "Content-Type":
-                                    "application/json"
-
-                            },
-
-                            body:
-                                JSON.stringify({
-
-                                    location:
-                                        query
-
-                                })
-
-                        }
-                    );
-
-
-                let result;
-
-
-                try {
-
-                    result =
-                        await response.json();
-
-                }
-
-                catch (jsonError) {
-
+                if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
                     throw new Error(
-                        "Location search returned an invalid server response."
+                        "Location search returned invalid coordinates."
                     );
-
                 }
 
-
-                if (!response.ok) {
-
-                    throw new Error(
-
-                        result.error ||
-                        result.details ||
-                        "Location search failed."
-
-                    );
-
-                }
-
-
-                // -------------------------------------------
-                // COORDINATES
-                // -------------------------------------------
-
-                const lat =
-                    Number(
-                        result.latitude
-                    );
-
-                const lon =
-                    Number(
-                        result.longitude
-                    );
-
-
-                if (
-                    !Number.isFinite(lat) ||
-                    !Number.isFinite(lon)
-                ) {
-
-                    throw new Error(
-                        "Invalid coordinates returned by location search."
-                    );
-
-                }
-
-
-                // -------------------------------------------
-                // NER CHECK
-                // -------------------------------------------
-
-                if (
-                    result.supported === false
-                ) {
-
+                if (!state) {
                     resetPage();
-
-
                     setStatus(
                         "This location is outside the supported Northeast India region."
                     );
-
-
-                    setText(
-                        warningLevel,
-                        "NER ONLY"
-                    );
-
+                    setText(warningLevel, "NER ONLY");
 
                     if (warningLevel) {
-
-                        warningLevel.className =
-                            "status-moderate";
-
+                        warningLevel.className = "status-moderate";
                     }
-
 
                     setText(
                         warningDescription,
                         "Early-warning monitoring is currently limited to Arunachal Pradesh, Assam, Manipur, Meghalaya, Mizoram, Nagaland, Sikkim and Tripura."
                     );
-
-
                     return;
-
                 }
-
-
-                // -------------------------------------------
-                // SHOW SEARCHED LOCATION
-                // -------------------------------------------
 
                 setText(
                     locationName,
-                    result.display_name ||
-                    query
+                    result.display_name || query
                 );
 
+                setText(stateName, state);
+
+                setText(
+                    coordinates,
+                    lat.toFixed(5) + ", " + lon.toFixed(5)
+                );
 
                 setStatus(
-                    "Location found. Running AI assessment..."
+                    "Location found in " + state + ". Running AI assessment..."
                 );
 
-
-                // -------------------------------------------
-                // RUN PREDICTION
-                // -------------------------------------------
-
-                await predict(
-                    lat,
-                    lon
-                );
+                await predict(lat, lon, state);
 
             }
-
 
             catch (error) {
 
-                console.error(
-                    "Search error:",
-                    error
-                );
-
+                console.error("Browser location search error:", error);
 
                 setStatus(
                     error.message ||
-                    "Location search failed."
+                    "Location search failed. Please try again."
                 );
 
-
-                setText(
-                    warningLevel,
-                    "MONITORING UNAVAILABLE"
-                );
-
+                setText(warningLevel, "MONITORING UNAVAILABLE");
 
                 if (warningLevel) {
-
-                    warningLevel.className =
-                        "status-neutral";
-
+                    warningLevel.className = "status-neutral";
                 }
 
             }
-
 
             finally {
 
                 if (searchButton) {
-
-                    searchButton.disabled =
-                        false;
-
-                    searchButton.textContent =
-                        "Monitor Location";
-
+                    searchButton.disabled = false;
+                    searchButton.textContent = "Monitor Location";
                 }
 
             }
