@@ -188,12 +188,6 @@ WEATHER_CACHE = {}
 
 WEATHER_CACHE_TTL = 300
 
-# Keep the last successful weather response even after the short TTL.
-# This lets the app continue working when Open-Meteo temporarily returns 429.
-WEATHER_STALE_CACHE = {}
-
-WEATHER_RETRY_AFTER_DEFAULT = 2
-
 
 # ============================================================
 # HTTP SESSION
@@ -884,7 +878,7 @@ def weather_key(
 # GET LIVE RAINFALL
 # ============================================================
 
-def get_live_rainfall(lat, lon, fallback_row=None):
+def get_live_rainfall(lat, lon):
 
     key = weather_key(
         lat,
@@ -894,7 +888,7 @@ def get_live_rainfall(lat, lon, fallback_row=None):
     now = time.time()
 
     # --------------------------------------------------------
-    # USE FRESH CACHE FIRST
+    # USE CACHE FIRST
     # --------------------------------------------------------
 
     cached = WEATHER_CACHE.get(
@@ -917,10 +911,12 @@ def get_live_rainfall(lat, lon, fallback_row=None):
 
             return cached["data"]
 
+
     print(
         f"Fetching live rainfall: "
         f"{lat:.5f}, {lon:.5f}"
     )
+
 
     params = {
 
@@ -949,29 +945,37 @@ def get_live_rainfall(lat, lon, fallback_row=None):
             "land"
     }
 
-    last_error = None
-    rate_limited = False
 
     # --------------------------------------------------------
-    # TRY OPEN-METEO
+    # TRY OPEN-METEO TWICE
     # --------------------------------------------------------
+
+    last_error = None
+
 
     for attempt in range(1, 3):
 
         try:
 
-            start_time = time.time()
+            start = time.time()
 
             print(
                 f"Open-Meteo attempt "
                 f"{attempt}/2"
             )
 
-            response = HTTP.get(
+
+            response = requests.get(
 
                 OPEN_METEO_URL,
 
                 params=params,
+
+                headers={
+                    "User-Agent":
+                        "Global-LandslideGuard/1.0 "
+                        "educational prototype"
+                },
 
                 timeout=(
                     5,
@@ -979,11 +983,13 @@ def get_live_rainfall(lat, lon, fallback_row=None):
                 )
             )
 
+
             elapsed = round(
                 time.time() -
-                start_time,
+                start,
                 2
             )
+
 
             print(
                 "Open-Meteo:",
@@ -993,30 +999,12 @@ def get_live_rainfall(lat, lon, fallback_row=None):
                 "sec"
             )
 
-            # HTTP 429 means the upstream service is rate limiting
-            # the deployment. Retrying immediately is usually not useful.
-            if response.status_code == 429:
-
-                rate_limited = True
-                last_error = requests.HTTPError(
-                    "Open-Meteo returned HTTP 429 (Too Many Requests)."
-                )
-
-                retry_after = response.headers.get(
-                    "Retry-After"
-                )
-
-                print(
-                    "Open-Meteo rate limited the request.",
-                    "Retry-After:",
-                    retry_after or "not provided"
-                )
-
-                break
 
             response.raise_for_status()
 
+
             data = response.json()
+
 
             # ------------------------------------------------
             # RAINFALL DATA
@@ -1028,6 +1016,7 @@ def get_live_rainfall(lat, lon, fallback_row=None):
                 "rain"
             )
 
+
             if rain_values is None:
 
                 raise RuntimeError(
@@ -1035,10 +1024,12 @@ def get_live_rainfall(lat, lon, fallback_row=None):
                     "no hourly rainfall data."
                 )
 
+
             rain = np.asarray(
                 rain_values,
                 dtype=float
             )
+
 
             rain = np.nan_to_num(
                 rain,
@@ -1047,6 +1038,7 @@ def get_live_rainfall(lat, lon, fallback_row=None):
                 neginf=0.0
             )
 
+
             if len(rain) < 168:
 
                 raise RuntimeError(
@@ -1054,10 +1046,12 @@ def get_live_rainfall(lat, lon, fallback_row=None):
                     f"{len(rain)} hourly values."
                 )
 
+
             current = (
                 data.get("current")
                 or {}
             )
+
 
             result = {
 
@@ -1114,13 +1108,14 @@ def get_live_rainfall(lat, lon, fallback_row=None):
                     ),
 
                 "source":
-                    "Open-Meteo",
-
-                "live":
-                    True
+                    "Open-Meteo"
             }
 
-            # Fresh cache
+
+            # ------------------------------------------------
+            # SAVE CACHE
+            # ------------------------------------------------
+
             WEATHER_CACHE[key] = {
 
                 "time":
@@ -1130,22 +1125,15 @@ def get_live_rainfall(lat, lon, fallback_row=None):
                     result
             }
 
-            # Stale cache survives the short TTL while the process is alive.
-            WEATHER_STALE_CACHE[key] = {
-
-                "time":
-                    time.time(),
-
-                "data":
-                    result
-            }
 
             print(
                 "LIVE RAINFALL:",
                 result
             )
 
+
             return result
+
 
         except requests.Timeout as exc:
 
@@ -1157,7 +1145,11 @@ def get_live_rainfall(lat, lon, fallback_row=None):
             )
 
             if attempt < 2:
-                time.sleep(0.5)
+
+                time.sleep(
+                    0.5
+                )
+
 
         except requests.RequestException as exc:
 
@@ -1169,7 +1161,11 @@ def get_live_rainfall(lat, lon, fallback_row=None):
             )
 
             if attempt < 2:
-                time.sleep(0.5)
+
+                time.sleep(
+                    0.5
+                )
+
 
         except Exception as exc:
 
@@ -1182,197 +1178,28 @@ def get_live_rainfall(lat, lon, fallback_row=None):
 
             break
 
+
     # --------------------------------------------------------
-    # FALLBACK 1: STALE SUCCESSFUL WEATHER CACHE
+    # IF LIVE REQUEST FAILED, USE RECENT CACHE IF AVAILABLE
     # --------------------------------------------------------
 
-    stale = WEATHER_STALE_CACHE.get(
-        key
-    )
-
-    if stale:
-
-        stale_data = dict(
-            stale["data"]
-        )
-
-        stale_data["source"] = (
-            "Open-Meteo (last successful cached data)"
-        )
-
-        stale_data["live"] = False
+    if cached:
 
         print(
-            "Live rainfall unavailable."
+            "Live rainfall failed."
         )
+
         print(
-            "Using last successful cached rainfall for this location."
+            "Using previous cached "
+            "rainfall for this location."
         )
 
-        return stale_data
+        return cached["data"]
 
-    # --------------------------------------------------------
-    # FALLBACK 2: DATASET DYNAMIC RAINFALL, IF AVAILABLE
-    # --------------------------------------------------------
-
-    if fallback_row is not None:
-
-        dynamic_columns = {
-            "rainfall_24h",
-            "rainfall_3day",
-            "rainfall_7day"
-        }
-
-        if dynamic_columns.issubset(
-            set(fallback_row.index)
-        ):
-
-            try:
-
-                result = {
-
-                    "rainfall_24h":
-                        round(
-                            float(
-                                fallback_row[
-                                    "rainfall_24h"
-                                ]
-                            ),
-                            2
-                        ),
-
-                    "rainfall_3day":
-                        round(
-                            float(
-                                fallback_row[
-                                    "rainfall_3day"
-                                ]
-                            ),
-                            2
-                        ),
-
-                    "rainfall_7day":
-                        round(
-                            float(
-                                fallback_row[
-                                    "rainfall_7day"
-                                ]
-                            ),
-                            2
-                        ),
-
-                    "current_rain":
-                        0.0,
-
-                    "current_precipitation":
-                        0.0,
-
-                    "source":
-                        "Dataset fallback (Open-Meteo unavailable)",
-
-                    "live":
-                        False
-                }
-
-                print(
-                    "Using dataset rainfall fallback:",
-                    result
-                )
-
-                return result
-
-            except (
-                TypeError,
-                ValueError
-            ):
-                pass
-
-    # --------------------------------------------------------
-    # FALLBACK 3: CLIMATOLOGICAL BASELINE
-    # --------------------------------------------------------
-    # This is only used when there is no successful weather cache
-    # and the dataset has no dynamic rainfall columns. It is NOT
-    # presented as live rainfall. The annual rainfall is converted
-    # into a simple daily climatological baseline so the model can
-    # still respond instead of returning HTTP 500.
-
-    if fallback_row is not None:
-
-        try:
-
-            annual = float(
-                fallback_row[
-                    "annual_rainfall"
-                ]
-            )
-
-            if np.isfinite(annual) and annual >= 0:
-
-                daily = annual / 365.25
-
-                result = {
-
-                    "rainfall_24h":
-                        round(
-                            daily,
-                            2
-                        ),
-
-                    "rainfall_3day":
-                        round(
-                            daily * 3,
-                            2
-                        ),
-
-                    "rainfall_7day":
-                        round(
-                            daily * 7,
-                            2
-                        ),
-
-                    "current_rain":
-                        0.0,
-
-                    "current_precipitation":
-                        0.0,
-
-                    "source":
-                        "Climatological baseline (Open-Meteo unavailable)",
-
-                    "live":
-                        False
-                }
-
-                print(
-                    "WARNING: Open-Meteo unavailable."
-                )
-                print(
-                    "Using climatological rainfall baseline "
-                    "derived from annual rainfall."
-                )
-
-                return result
-
-        except (
-            TypeError,
-            ValueError,
-            KeyError
-        ):
-            pass
-
-    # --------------------------------------------------------
-    # NO SAFE FALLBACK
-    # --------------------------------------------------------
-
-    if rate_limited:
-        raise RuntimeError(
-            "Open-Meteo is temporarily rate limiting requests "
-            "and no rainfall fallback is available yet."
-        )
 
     raise RuntimeError(
-        "Live rainfall service is temporarily unavailable "
-        "and no rainfall fallback is available."
+        "Live rainfall service is temporarily "
+        "unavailable after two attempts."
     )
 
 
@@ -2028,9 +1855,7 @@ def predict():
 
             latitude,
 
-            longitude,
-
-            fallback_row=row
+            longitude
 
         )
 
@@ -2332,18 +2157,7 @@ def predict():
                     ],
 
                 "weather_source":
-                    weather.get(
-                        "source",
-                        "Open-Meteo"
-                    ),
-
-                "weather_live":
-                    bool(
-                        weather.get(
-                            "live",
-                            False
-                        )
-                    )
+                    "Open-Meteo"
 
             }
 
