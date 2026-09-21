@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask, render_template, request, jsonify, Response
 
 import joblib
@@ -2211,11 +2213,13 @@ load_project()
 
 if __name__ == "__main__":
 
+    port= int(os.environ.get("PORT",2005))
+
     app.run(
 
         host="0.0.0.0",
 
-        port=2005,
+        port=port,
 
         debug=False,
 
