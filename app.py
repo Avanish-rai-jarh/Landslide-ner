@@ -1,7 +1,4 @@
-import os
-
 from flask import Flask, render_template, request, jsonify, Response
-
 import joblib
 import pandas as pd
 import numpy as np
@@ -9,132 +6,70 @@ import requests
 import json
 import unicodedata
 import time
-
 from pathlib import Path
 from shapely.geometry import shape, mapping
 
-
-# ============================================================
-# FLASK APPLICATION
-# ============================================================
 
 app = Flask(__name__)
 
 
 # ============================================================
-# PROJECT PATHS
+# PATHS
 # ============================================================
 
 BASE = Path(__file__).resolve().parent
 
-MODEL_PATH = (
-    BASE /
-    "models" /
-    "landslide_model_dynamic.pkl"
-)
+MODEL_PATH = BASE / "models" / "landslide_model_dynamic.pkl"
+DATASET_PATH = BASE / "data" / "ner_dataset.csv"
+GEOJSON_PATH = BASE / "data" / "india_states.geojson"
 
-DATASET_PATH = (
-    BASE /
-    "data" /
-    "ner_dataset.csv"
-)
-
-GEOJSON_PATH = (
-    BASE /
-    "data" /
-    "india_states.geojson"
-)
+OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
 
 
 # ============================================================
-# EXTERNAL SERVICES
-# ============================================================
-
-OPEN_METEO_URL = (
-    "https://api.open-meteo.com/v1/forecast"
-)
-
-NOMINATIM_URL = (
-    "https://nominatim.openstreetmap.org/search"
-)
-
-
-# ============================================================
-# MODEL FEATURES
+# EXACT FEATURES USED BY YOUR DYNAMIC MODEL
 # ============================================================
 
 FEATURES = [
-
     "elevation",
-
     "slope",
-
     "aspect",
-
     "annual_rainfall",
-
     "soil_clay",
-
     "soil_sand",
-
     "soil_ph",
-
     "rainfall_24h",
-
     "rainfall_3day",
-
     "rainfall_7day"
-
 ]
 
 
 STATIC_FEATURES = [
-
     "elevation",
-
     "slope",
-
     "aspect",
-
     "annual_rainfall",
-
     "soil_clay",
-
     "soil_sand",
-
     "soil_ph"
-
 ]
 
 
 # ============================================================
-# SUPPORTED NORTHEAST INDIA STATES
+# NER STATES
 # ============================================================
 
 SUPPORTED_STATES = {
-
     "Arunachal Pradesh",
-
     "Assam",
-
     "Manipur",
-
     "Meghalaya",
-
     "Mizoram",
-
     "Nagaland",
-
     "Sikkim",
-
     "Tripura"
-
 }
 
-
-# ============================================================
-# NORMALIZE TEXT
-# ============================================================
 
 def norm(value):
 
@@ -144,9 +79,8 @@ def norm(value):
     )
 
     text = "".join(
-        character
-        for character in text
-        if not unicodedata.combining(character)
+        c for c in text
+        if not unicodedata.combining(c)
     )
 
     return " ".join(
@@ -155,28 +89,24 @@ def norm(value):
 
 
 SUPPORTED_NORMALIZED = {
-    norm(state)
-    for state in SUPPORTED_STATES
+    norm(x)
+    for x in SUPPORTED_STATES
 }
 
 
 # ============================================================
-# GLOBAL DATA
+# GLOBAL VARIABLES
 # ============================================================
 
 model = None
-
 environment_data = None
-
 india_geojson = None
 
 NER_GEOJSON_TEXT = "{}"
 
 
-# ============================================================
-# MODEL THRESHOLD
-# ============================================================
-
+# Warning threshold only.
+# This is NOT a calibrated probability threshold.
 MODEL_THRESHOLD = 0.50
 
 
@@ -189,22 +119,16 @@ WEATHER_CACHE = {}
 WEATHER_CACHE_TTL = 300
 
 
-# ============================================================
-# HTTP SESSION
-# ============================================================
-
 HTTP = requests.Session()
 
 HTTP.headers.update({
-
     "User-Agent":
         "Global-LandslideGuard/1.0 educational prototype"
-
 })
 
 
 # ============================================================
-# GET STATE NAME FROM GEOJSON PROPERTIES
+# STATE NAME
 # ============================================================
 
 def get_state_name(properties):
@@ -212,31 +136,19 @@ def get_state_name(properties):
     keys = [
 
         "shapeName",
-
         "shape_name",
-
         "NAME_1",
-
         "NAME1",
-
         "st_nm",
-
         "ST_NM",
-
         "state_name",
-
         "STATE_NAME",
-
         "STATE",
-
         "State",
-
         "name",
-
         "NAME"
 
     ]
-
 
     for key in keys:
 
@@ -244,36 +156,39 @@ def get_state_name(properties):
 
         if value:
 
-            return str(value).strip()
+            return str(
+                value
+            ).strip()
 
 
     for value in properties.values():
 
         if norm(value) in SUPPORTED_NORMALIZED:
 
-            return str(value).strip()
+            return str(
+                value
+            ).strip()
 
 
     return "Unknown"
 
 
 # ============================================================
-# POINT ON LINE SEGMENT
+# POINT IN POLYGON
 # ============================================================
 
 def point_on_segment(
     point,
-    start,
-    end,
-    tol=1e-9
+    a,
+    b,
+    tolerance=1e-9
 ):
 
     x, y = point
 
-    x1, y1 = start
+    x1, y1 = a
 
-    x2, y2 = end
-
+    x2, y2 = b
 
     cross = (
         (x - x1) * (y2 - y1)
@@ -281,32 +196,25 @@ def point_on_segment(
         (y - y1) * (x2 - x1)
     )
 
-
-    if abs(cross) > tol:
+    if abs(cross) > tolerance:
 
         return False
 
 
     return (
-
-        min(x1, x2) - tol
+        min(x1, x2) - tolerance
         <= x
         <=
-        max(x1, x2) + tol
+        max(x1, x2) + tolerance
 
         and
 
-        min(y1, y2) - tol
+        min(y1, y2) - tolerance
         <= y
         <=
-        max(y1, y2) + tol
-
+        max(y1, y2) + tolerance
     )
 
-
-# ============================================================
-# POINT IN RING
-# ============================================================
 
 def point_in_ring(
     point,
@@ -325,7 +233,9 @@ def point_in_ring(
     j = len(ring) - 1
 
 
-    for i in range(len(ring)):
+    for i in range(
+        len(ring)
+    ):
 
         xi, yi = ring[i]
 
@@ -345,9 +255,11 @@ def point_in_ring(
 
             denominator = yj - yi
 
-            if abs(denominator) > 1e-12:
+            if abs(
+                denominator
+            ) > 1e-12:
 
-                xcross = (
+                x_intersection = (
                     (xj - xi)
                     *
                     (y - yi)
@@ -357,7 +269,7 @@ def point_in_ring(
                     xi
                 )
 
-                if x < xcross:
+                if x < x_intersection:
 
                     inside = not inside
 
@@ -367,10 +279,6 @@ def point_in_ring(
 
     return inside
 
-
-# ============================================================
-# POINT IN POLYGON
-# ============================================================
 
 def point_in_polygon(
     point,
@@ -403,47 +311,32 @@ def point_in_polygon(
     return True
 
 
-# ============================================================
-# POINT IN MULTIPOLYGON
-# ============================================================
-
 def point_in_multipolygon(
     point,
     multipolygon
 ):
 
     return any(
-
         point_in_polygon(
             point,
             polygon
         )
 
-        for polygon in (
-            multipolygon or []
-        )
-
+        for polygon
+        in
+        (multipolygon or [])
     )
 
 
-# ============================================================
-# GET STATE FROM COORDINATES
-# ============================================================
-
 def get_state_from_coordinates(
-    latitude,
-    longitude
+    lat,
+    lon
 ):
 
     point = (
-        float(longitude),
-        float(latitude)
+        float(lon),
+        float(lat)
     )
-
-
-    if not india_geojson:
-
-        return None
 
 
     for feature in india_geojson.get(
@@ -452,7 +345,9 @@ def get_state_from_coordinates(
     ):
 
         geometry = (
-            feature.get("geometry")
+            feature.get(
+                "geometry"
+            )
             or {}
         )
 
@@ -469,18 +364,16 @@ def get_state_from_coordinates(
         state = get_state_name(
             feature.get(
                 "properties"
-            ) or {}
+            )
+            or {}
         )
 
 
         try:
 
-            geometry_type = geometry.get(
+            if geometry.get(
                 "type"
-            )
-
-
-            if geometry_type == "Polygon":
+            ) == "Polygon":
 
                 if point_in_polygon(
                     point,
@@ -490,7 +383,9 @@ def get_state_from_coordinates(
                     return state
 
 
-            elif geometry_type == "MultiPolygon":
+            elif geometry.get(
+                "type"
+            ) == "MultiPolygon":
 
                 if point_in_multipolygon(
                     point,
@@ -506,41 +401,32 @@ def get_state_from_coordinates(
             IndexError
         ):
 
-            continue
+            pass
 
 
     return None
 
 
-# ============================================================
-# CHECK SUPPORTED LOCATION
-# ============================================================
-
 def is_supported_location(
-    latitude,
-    longitude
+    lat,
+    lon
 ):
 
     state = get_state_from_coordinates(
-        latitude,
-        longitude
+        lat,
+        lon
     )
 
 
-    supported = (
-
+    return (
         bool(state)
-
         and
-
         norm(state)
         in
-        SUPPORTED_NORMALIZED
+        SUPPORTED_NORMALIZED,
 
+        state
     )
-
-
-    return supported, state
 
 
 # ============================================================
@@ -550,11 +436,8 @@ def is_supported_location(
 def load_project():
 
     global model
-
     global environment_data
-
     global india_geojson
-
     global NER_GEOJSON_TEXT
 
 
@@ -566,9 +449,15 @@ def load_project():
 
         raise FileNotFoundError(
 
-            f"Dynamic model not found: "
-            f"{MODEL_PATH}"
+            f"""
+Dynamic model not found:
 
+{MODEL_PATH}
+
+Make sure this file exists:
+
+models/landslide_model_dynamic.pkl
+"""
         )
 
 
@@ -576,6 +465,21 @@ def load_project():
         MODEL_PATH
     )
 
+
+    print(
+        "Model loaded:",
+        MODEL_PATH.name
+    )
+
+    print(
+        "Model type:",
+        type(model).__name__
+    )
+
+
+    # --------------------------------------------------------
+    # VERIFY MODEL FEATURES
+    # --------------------------------------------------------
 
     model_features = getattr(
         model,
@@ -591,22 +495,26 @@ def load_project():
         )
 
 
+        print(
+            "Model features:",
+            model_features
+        )
+
+
         if model_features != FEATURES:
 
             raise ValueError(
 
-                "MODEL FEATURE MISMATCH.\n"
+                "MODEL FEATURE MISMATCH.\n\n"
 
-                f"Model expects: "
-                f"{model_features}\n"
+                f"Model expects:\n"
+                f"{model_features}\n\n"
 
-                f"Backend provides: "
-                f"{FEATURES}\n"
+                f"Backend provides:\n"
+                f"{FEATURES}\n\n"
 
-                "Use "
-                "models/landslide_model_dynamic.pkl "
-                "created from the dynamic notebook."
-
+                "Use the dynamic model generated "
+                "from ner_dataset_dynamic.csv."
             )
 
 
@@ -617,10 +525,7 @@ def load_project():
     if not DATASET_PATH.exists():
 
         raise FileNotFoundError(
-
-            f"Dataset not found: "
-            f"{DATASET_PATH}"
-
+            f"Dataset not found:\n{DATASET_PATH}"
         )
 
 
@@ -630,22 +535,19 @@ def load_project():
 
 
     required_columns = [
-
         "latitude",
-
         "longitude"
-
     ] + STATIC_FEATURES
 
 
     missing_columns = [
-
         column
+        for column
+        in required_columns
 
-        for column in required_columns
-
-        if column not in environment_data.columns
-
+        if column
+        not in
+        environment_data.columns
     ]
 
 
@@ -653,46 +555,37 @@ def load_project():
 
         raise ValueError(
 
-            "ner_dataset.csv is missing: "
+            "ner_dataset.csv is missing:\n"
             +
             ", ".join(
                 missing_columns
             )
-
         )
 
 
     for column in required_columns:
 
         environment_data[column] = pd.to_numeric(
-
             environment_data[column],
-
             errors="coerce"
-
         )
 
 
     environment_data = (
-
         environment_data
-
         .dropna(
             subset=required_columns
         )
-
         .reset_index(
             drop=True
         )
-
     )
 
 
-    if environment_data.empty:
-
-        raise ValueError(
-            "ner_dataset.csv contains no valid rows."
-        )
+    print(
+        "Environmental rows:",
+        len(environment_data)
+    )
 
 
     # --------------------------------------------------------
@@ -702,10 +595,7 @@ def load_project():
     if not GEOJSON_PATH.exists():
 
         raise FileNotFoundError(
-
-            f"GeoJSON not found: "
-            f"{GEOJSON_PATH}"
-
+            f"GeoJSON not found:\n{GEOJSON_PATH}"
         )
 
 
@@ -721,7 +611,7 @@ def load_project():
 
 
     # --------------------------------------------------------
-    # CREATE NER GEOJSON
+    # BUILD NER GEOJSON
     # --------------------------------------------------------
 
     ner_features = []
@@ -733,15 +623,18 @@ def load_project():
     ):
 
         state = get_state_name(
-
             feature.get(
                 "properties"
-            ) or {}
-
+            )
+            or {}
         )
 
 
-        if norm(state) not in SUPPORTED_NORMALIZED:
+        if (
+            norm(state)
+            not in
+            SUPPORTED_NORMALIZED
+        ):
 
             continue
 
@@ -760,16 +653,15 @@ def load_project():
 
             try:
 
-                copy_feature["geometry"] = mapping(
+                copy_feature[
+                    "geometry"
+                ] = mapping(
 
                     shape(
                         geometry
                     ).simplify(
-
                         0.005,
-
                         preserve_topology=True
-
                     )
 
                 )
@@ -800,45 +692,25 @@ def load_project():
             ",",
             ":"
         )
-
     )
 
 
-    # --------------------------------------------------------
-    # STARTUP INFORMATION
-    # --------------------------------------------------------
+    print(
+        "NER boundary features:",
+        len(ner_features)
+    )
+
 
     print(
         "============================================"
     )
 
     print(
-        "LANDSLIDEGUARD STARTED"
+        "LANDSLIDEGUARD READY"
     )
 
     print(
-        "Model:",
-        MODEL_PATH.name
-    )
-
-    print(
-        "Model type:",
-        type(model).__name__
-    )
-
-    print(
-        "Dataset rows:",
-        len(environment_data)
-    )
-
-    print(
-        "NER states:",
-        len(ner_features)
-    )
-
-    print(
-        "Features:",
-        FEATURES
+        "Dynamic model: ENABLED"
     )
 
     print(
@@ -851,70 +723,67 @@ def load_project():
 
 
 # ============================================================
-# WEATHER CACHE KEY
+# LIVE RAINFALL
 # ============================================================
 
 def weather_key(
-    latitude,
-    longitude
+    lat,
+    lon
 ):
 
     return (
-
         round(
-            float(latitude),
+            float(lat),
             4
         ),
 
         round(
-            float(longitude),
+            float(lon),
             4
         )
-
     )
 
 
-# ============================================================
-# GET LIVE RAINFALL
-# ============================================================
-
-def get_live_rainfall(lat, lon):
+def get_live_rainfall(
+    lat,
+    lon
+):
 
     key = weather_key(
         lat,
         lon
     )
 
+
     now = time.time()
 
-    # --------------------------------------------------------
-    # USE CACHE FIRST
-    # --------------------------------------------------------
 
     cached = WEATHER_CACHE.get(
         key
     )
 
+
     if cached:
 
         age = (
-            now -
+            now
+            -
             cached["time"]
         )
+
 
         if age < WEATHER_CACHE_TTL:
 
             print(
-                "Using cached weather:",
-                key
+                "Using cached live weather"
             )
 
             return cached["data"]
 
 
     print(
-        f"Fetching live rainfall: "
-        f"{lat:.5f}, {lon:.5f}"
+        f"Fetching live rainfall "
+        f"for {lat:.5f}, {lon:.5f}"
     )
 
 
@@ -936,7 +805,7 @@ def get_live_rainfall(lat, lon):
             168,
 
         "forecast_hours":
-            0,
+            1,
 
         "timezone":
             "auto",
@@ -946,309 +815,334 @@ def get_live_rainfall(lat, lon):
     }
 
 
-    # --------------------------------------------------------
-    # TRY OPEN-METEO TWICE
-    # --------------------------------------------------------
+    try:
 
-    last_error = None
+        start = time.time()
 
 
-    for attempt in range(1, 3):
+        response = HTTP.get(
 
-        try:
+            OPEN_METEO_URL,
 
-            start = time.time()
+            params=params,
 
-            print(
-                f"Open-Meteo attempt "
-                f"{attempt}/2"
+            timeout=(
+                3,
+                6
             )
+        )
 
 
-            response = requests.get(
+        elapsed = round(
+            time.time()
+            -
+            start,
+            2
+        )
 
-                OPEN_METEO_URL,
 
-                params=params,
+        print(
+            "Open-Meteo status:",
+            response.status_code,
+            "| time:",
+            elapsed,
+            "seconds"
+        )
 
-                headers={
-                    "User-Agent":
-                        "Global-LandslideGuard/1.0 "
-                        "educational prototype"
-                },
 
-                timeout=(
-                    5,
-                    12
-                )
+        response.raise_for_status()
+
+
+        data = response.json()
+
+
+        hourly = (
+            data.get(
+                "hourly"
             )
+            or {}
+        )
 
 
-            elapsed = round(
-                time.time() -
-                start,
-                2
-            )
-
-
-            print(
-                "Open-Meteo:",
-                response.status_code,
-                "in",
-                elapsed,
-                "sec"
-            )
-
-
-            response.raise_for_status()
-
-
-            data = response.json()
-
-
-            # ------------------------------------------------
-            # RAINFALL DATA
-            # ------------------------------------------------
-
-            rain_values = (
-                data.get("hourly") or {}
-            ).get(
+        rainfall_values = (
+            hourly.get(
                 "rain"
             )
+        )
 
 
-            if rain_values is None:
+        if rainfall_values is None:
 
-                raise RuntimeError(
-                    "Open-Meteo returned "
-                    "no hourly rainfall data."
-                )
-
-
-            rain = np.asarray(
-                rain_values,
-                dtype=float
+            raise RuntimeError(
+                "Open-Meteo returned no hourly rainfall."
             )
 
 
-            rain = np.nan_to_num(
-                rain,
-                nan=0.0,
-                posinf=0.0,
-                neginf=0.0
+        rainfall = np.asarray(
+            rainfall_values,
+            dtype=float
+        )
+
+
+        rainfall = np.nan_to_num(
+            rainfall,
+            nan=0.0,
+            posinf=0.0,
+            neginf=0.0
+        )
+
+
+        if len(rainfall) < 168:
+
+            raise RuntimeError(
+
+                f"Only {len(rainfall)} "
+                "hourly rainfall values were returned."
             )
 
 
-            if len(rain) < 168:
-
-                raise RuntimeError(
-                    "Open-Meteo returned only "
-                    f"{len(rain)} hourly values."
-                )
-
-
-            current = (
-                data.get("current")
-                or {}
+        rainfall_24h = float(
+            np.sum(
+                rainfall[-24:]
             )
+        )
 
 
-            result = {
+        rainfall_3day = float(
+            np.sum(
+                rainfall[-72:]
+            )
+        )
 
-                "rainfall_24h":
-                    round(
-                        float(
-                            np.sum(
-                                rain[-24:]
-                            )
-                        ),
-                        2
+
+        rainfall_7day = float(
+            np.sum(
+                rainfall[-168:]
+            )
+        )
+
+
+        current = (
+            data.get(
+                "current"
+            )
+            or {}
+        )
+
+
+        result = {
+
+            "rainfall_24h":
+                round(
+                    rainfall_24h,
+                    2
+                ),
+
+            "rainfall_3day":
+                round(
+                    rainfall_3day,
+                    2
+                ),
+
+            "rainfall_7day":
+                round(
+                    rainfall_7day,
+                    2
+                ),
+
+            "current_rain":
+                round(
+                    float(
+                        current.get(
+                            "rain",
+                            0
+                        )
+                        or
+                        0
                     ),
+                    2
+                ),
 
-                "rainfall_3day":
-                    round(
-                        float(
-                            np.sum(
-                                rain[-72:]
-                            )
-                        ),
-                        2
+            "current_precipitation":
+                round(
+                    float(
+                        current.get(
+                            "precipitation",
+                            0
+                        )
+                        or
+                        0
                     ),
+                    2
+                ),
 
-                "rainfall_7day":
-                    round(
-                        float(
-                            np.sum(
-                                rain[-168:]
-                            )
-                        ),
-                        2
-                    ),
-
-                "current_rain":
-                    round(
-                        float(
-                            current.get(
-                                "rain",
-                                0
-                            ) or 0
-                        ),
-                        2
-                    ),
-
-                "current_precipitation":
-                    round(
-                        float(
-                            current.get(
-                                "precipitation",
-                                0
-                            ) or 0
-                        ),
-                        2
-                    ),
-
-                "source":
-                    "Open-Meteo"
-            }
+            "source":
+                "Open-Meteo"
+        }
 
 
-            # ------------------------------------------------
-            # SAVE CACHE
-            # ------------------------------------------------
+        WEATHER_CACHE[key] = {
 
-            WEATHER_CACHE[key] = {
+            "time":
+                now,
 
-                "time":
-                    time.time(),
-
-                "data":
-                    result
-            }
-
-
-            print(
-                "LIVE RAINFALL:",
+            "data":
                 result
-            )
+        }
 
-
-            return result
-
-
-        except requests.Timeout as exc:
-
-            last_error = exc
-
-            print(
-                f"Open-Meteo timeout "
-                f"on attempt {attempt}/2"
-            )
-
-            if attempt < 2:
-
-                time.sleep(
-                    0.5
-                )
-
-
-        except requests.RequestException as exc:
-
-            last_error = exc
-
-            print(
-                "Open-Meteo request error:",
-                repr(exc)
-            )
-
-            if attempt < 2:
-
-                time.sleep(
-                    0.5
-                )
-
-
-        except Exception as exc:
-
-            last_error = exc
-
-            print(
-                "Rainfall processing error:",
-                repr(exc)
-            )
-
-            break
-
-
-    # --------------------------------------------------------
-    # IF LIVE REQUEST FAILED, USE RECENT CACHE IF AVAILABLE
-    # --------------------------------------------------------
-
-    if cached:
 
         print(
-            "Live rainfall failed."
+            "LIVE RAINFALL:",
+            result
         )
 
-        print(
-            "Using previous cached "
-            "rainfall for this location."
+
+        return result
+
+
+    except requests.Timeout:
+
+        raise RuntimeError(
+
+            "Live rainfall request timed out. "
+            "Please try again."
         )
 
-        return cached["data"]
+
+    except requests.RequestException:
+
+        raise RuntimeError(
+
+            "Live rainfall service is temporarily unavailable."
+        )
 
 
-    raise RuntimeError(
-        "Live rainfall service is temporarily "
-        "unavailable after two attempts."
-    )
+    except Exception as exc:
+
+        raise RuntimeError(
+
+            f"Live rainfall processing failed: {exc}"
+        )
 
 
 # ============================================================
-# FIND NEAREST ENVIRONMENTAL DATASET POINT
+# ENVIRONMENT LOOKUP
 # ============================================================
 
 def nearest_environment(
-    latitude,
-    longitude
+    lat,
+    lon
 ):
 
     distance = (
 
         (
-            environment_data["latitude"]
+            environment_data[
+                "latitude"
+            ]
             -
-            latitude
+            lat
         ) ** 2
 
         +
 
         (
-            environment_data["longitude"]
+            environment_data[
+                "longitude"
+            ]
             -
-            longitude
+            lon
         ) ** 2
 
     )
 
 
-    index = distance.idxmin()
-
-
-    row = environment_data.loc[
-        index
+    return environment_data.loc[
+        distance.idxmin()
     ]
 
 
-    print(
-        "Nearest environmental point found."
-    )
 
-
-    return row
 
 
 # ============================================================
-# RISK INFORMATION
+# EARLY WARNING TRIGGER
+# ============================================================
+
+def early_warning_info(
+    rainfall_24h,
+    rainfall_3day,
+    rainfall_7day
+):
+
+    rainfall_24h = float(rainfall_24h)
+    rainfall_3day = float(rainfall_3day)
+    rainfall_7day = float(rainfall_7day)
+
+
+    # --------------------------------------------------------
+    # PROTOTYPE RAINFALL TRIGGER
+    # --------------------------------------------------------
+    #
+    # These are prototype operational thresholds.
+    # They are NOT calibrated NER warning thresholds.
+    #
+    # They will later be replaced by validated
+    # rainfall-trigger thresholds for NER.
+    # --------------------------------------------------------
+
+    if (
+        rainfall_24h >= 100
+        or rainfall_3day >= 200
+        or rainfall_7day >= 300
+    ):
+
+        return {
+            "level": "ALERT",
+            "css_level": "high",
+            "triggered": True,
+            "message":
+                "High recent rainfall may increase "
+                "landslide triggering potential.",
+            "reason":
+                "Rainfall trigger threshold exceeded."
+        }
+
+
+    if (
+        rainfall_24h >= 50
+        or rainfall_3day >= 100
+        or rainfall_7day >= 200
+    ):
+
+        return {
+            "level": "WATCH",
+            "css_level": "moderate",
+            "triggered": True,
+            "message":
+                "Recent rainfall requires continued "
+                "monitoring of landslide-prone terrain.",
+            "reason":
+                "Rainfall monitoring threshold exceeded."
+        }
+
+
+    return {
+        "level": "NORMAL",
+        "css_level": "low",
+        "triggered": False,
+        "message":
+            "Recent rainfall is below the prototype "
+            "monitoring thresholds.",
+        "reason":
+            "No prototype rainfall trigger detected."
+    }
+
+
+
+
+# ============================================================
+# RISK
 # ============================================================
 
 def risk_info(
@@ -1258,42 +1152,30 @@ def risk_info(
     if risk >= 70:
 
         return (
-
             "HIGH RISK",
-
             "high",
-
             "High model susceptibility score."
-
         )
 
 
     if risk >= 40:
 
         return (
-
             "MODERATE RISK",
-
             "moderate",
-
             "Moderate model susceptibility score."
-
         )
 
 
     return (
-
         "LOW RISK",
-
         "low",
-
         "Lower model susceptibility score."
-
     )
 
 
 # ============================================================
-# BUILD EXPLANATION REASONS
+# REASONS
 # ============================================================
 
 def build_reasons(
@@ -1303,9 +1185,7 @@ def build_reasons(
 ):
 
     reasons = [
-
         f"State: {state}"
-
     ]
 
 
@@ -1317,92 +1197,69 @@ def build_reasons(
     if slope >= 30:
 
         reasons.append(
-
             f"Steep terrain detected "
             f"(slope: {slope:.2f}°)."
-
         )
-
 
     elif slope >= 15:
 
         reasons.append(
-
             f"Moderately steep terrain detected "
             f"(slope: {slope:.2f}°)."
-
         )
-
 
     else:
 
         reasons.append(
-
             f"Relatively gentle terrain detected "
             f"(slope: {slope:.2f}°)."
-
         )
 
 
     reasons.append(
-
         f"Elevation: "
         f"{float(row['elevation']):.2f} m."
-
     )
 
 
     reasons.append(
-
         f"Annual rainfall baseline: "
         f"{float(row['annual_rainfall']):.2f} mm."
-
     )
 
 
     reasons.append(
-
         f"Live rainfall, last 24h: "
         f"{weather['rainfall_24h']:.2f} mm."
-
     )
 
 
     reasons.append(
-
         f"Live rainfall, last 3 days: "
         f"{weather['rainfall_3day']:.2f} mm."
-
     )
 
 
     reasons.append(
-
         f"Live rainfall, last 7 days: "
         f"{weather['rainfall_7day']:.2f} mm."
-
     )
 
 
     reasons.append(
-
         f"Soil: clay "
         f"{float(row['soil_clay']):.2f}%, "
-
         f"sand "
         f"{float(row['soil_sand']):.2f}%, "
-
         f"pH "
         f"{float(row['soil_ph']):.2f}."
-
     )
 
 
     reasons.append(
-
-        "This is a prototype susceptibility indicator, "
-        "not a guarantee of an imminent landslide."
-
+        "This is a prototype susceptibility "
+        "indicator, not a guarantee of an "
+        "imminent landslide."
     )
 
 
@@ -1413,16 +1270,13 @@ def build_reasons(
 # HOME
 # ============================================================
 
+# ============================================================
+# MAIN PAGES
+# ============================================================
+
 @app.route("/")
 def home():
-
-    return render_template(
-        "index.html"
-    )
-
-# ============================================================
-# SEPARATE WEBSITE PAGES
-# ============================================================
+    return render_template("index.html")
 
 
 @app.route("/early-warning")
@@ -1448,13 +1302,9 @@ def about():
 def health():
 
     model_features = getattr(
-
         model,
-
         "feature_names_in_",
-
         None
-
     )
 
 
@@ -1467,9 +1317,7 @@ def health():
             model is not None,
 
         "model":
-            type(model).__name__
-            if model is not None
-            else None,
+            type(model).__name__,
 
         "dynamic_model":
             True,
@@ -1497,12 +1345,11 @@ def health():
             sorted(
                 SUPPORTED_STATES
             )
-
     })
 
 
 # ============================================================
-# NER STATES
+# NER GEOJSON
 # ============================================================
 
 @app.route("/ner-states")
@@ -1514,21 +1361,15 @@ def ner_states():
 
         status=200,
 
-        mimetype="application/geo+json",
+        mimetype=
+            "application/geo+json",
 
         headers={
-
             "Cache-Control":
                 "public, max-age=3600"
-
         }
-
     )
 
-
-# ============================================================
-# ALL INDIA STATES
-# ============================================================
 
 @app.route("/india-states")
 def india_states():
@@ -1536,22 +1377,18 @@ def india_states():
     return Response(
 
         json.dumps(
-
             india_geojson,
-
             ensure_ascii=False,
-
             separators=(
                 ",",
                 ":"
             )
-
         ),
 
         status=200,
 
-        mimetype="application/geo+json"
-
+        mimetype=
+            "application/geo+json"
     )
 
 
@@ -1574,22 +1411,18 @@ def search_location():
 
 
     query = str(
-
         data.get(
             "location",
             ""
         )
-
     ).strip()
 
 
     if not query:
 
         return jsonify({
-
             "error":
                 "Enter a location to search."
-
         }), 400
 
 
@@ -1597,7 +1430,7 @@ def search_location():
 
         response = HTTP.get(
 
-            NOMINATIM_URL,
+            "https://nominatim.openstreetmap.org/search",
 
             params={
 
@@ -1609,11 +1442,12 @@ def search_location():
 
                 "limit":
                     1
-
             },
 
-            timeout=(5, 10)
-
+            timeout=(
+                3,
+                6
+            )
         )
 
 
@@ -1636,19 +1470,20 @@ def search_location():
         result = results[0]
 
 
-        latitude = float(
+        lat = float(
             result["lat"]
         )
 
-        longitude = float(
+
+        lon = float(
             result["lon"]
         )
 
 
         supported, state = (
             is_supported_location(
-                latitude,
-                longitude
+                lat,
+                lon
             )
         )
 
@@ -1656,10 +1491,10 @@ def search_location():
         return jsonify({
 
             "latitude":
-                latitude,
+                lat,
 
             "longitude":
-                longitude,
+                lon,
 
             "display_name":
                 result.get(
@@ -1672,18 +1507,7 @@ def search_location():
 
             "supported":
                 supported
-
         })
-
-
-    except requests.Timeout:
-
-        return jsonify({
-
-            "error":
-                "Location search timed out. Please try again."
-
-        }), 503
 
 
     except requests.RequestException:
@@ -1700,14 +1524,17 @@ def search_location():
 # PREDICTION
 # ============================================================
 
+# ============================================================
+# PREDICTION
+# ============================================================
+
 @app.route(
     "/predict",
     methods=["POST"]
 )
 def predict():
 
-    start_time = time.time()
-
+    start = time.time()
 
     data = (
         request.get_json(
@@ -1716,21 +1543,19 @@ def predict():
         or {}
     )
 
-
     # --------------------------------------------------------
-    # COORDINATES
+    # GET COORDINATES
     # --------------------------------------------------------
 
     try:
 
-        latitude = float(
+        lat = float(
             data["latitude"]
         )
 
-        longitude = float(
+        lon = float(
             data["longitude"]
         )
-
 
     except (
         KeyError,
@@ -1746,18 +1571,14 @@ def predict():
         }), 400
 
 
+    # --------------------------------------------------------
+    # VALIDATE COORDINATES
+    # --------------------------------------------------------
+
     if not (
-
-        -90
-        <= latitude
-        <= 90
-
+        -90 <= lat <= 90
         and
-
-        -180
-        <= longitude
-        <= 180
-
+        -180 <= lon <= 180
     ):
 
         return jsonify({
@@ -1770,40 +1591,34 @@ def predict():
 
     try:
 
-        # ----------------------------------------------------
+        # ====================================================
         # CHECK NER
-        # ----------------------------------------------------
+        # ====================================================
 
         supported, state = (
             is_supported_location(
-                latitude,
-                longitude
+                lat,
+                lon
             )
         )
 
 
         print(
-
             f"Prediction request: "
-            f"lat={latitude:.6f}, "
-            f"lon={longitude:.6f}, "
+            f"lat={lat:.6f}, "
+            f"lon={lon:.6f}, "
             f"state={state}, "
             f"supported={supported}"
-
         )
 
 
         if not supported:
 
             state_text = (
-
                 state
-
                 or
-
                 "outside the supported "
                 "Northeast India region"
-
             )
 
 
@@ -1816,15 +1631,15 @@ def predict():
                     state_text,
 
                 "error":
-                    "Prediction is available only "
-                    "for Northeast India.",
+                    "Prediction is available "
+                    "only for Northeast India.",
 
                 "title":
                     "Northeast India only",
 
                 "message":
-                    f"Selected location is in "
-                    f"{state_text}.",
+                    f"Selected location is "
+                    f"in {state_text}.",
 
                 "supported_states":
                     sorted(
@@ -1834,35 +1649,198 @@ def predict():
             }), 403
 
 
-        # ----------------------------------------------------
-        # ENVIRONMENT
-        # ----------------------------------------------------
+        # ====================================================
+        # STATIC ENVIRONMENT
+        # ====================================================
 
         row = nearest_environment(
-
-            latitude,
-
-            longitude
-
+            lat,
+            lon
         )
 
 
-        # ----------------------------------------------------
-        # LIVE RAINFALL
-        # ----------------------------------------------------
-
-        weather = get_live_rainfall(
-
-            latitude,
-
-            longitude
-
+        print(
+            "Nearest environmental "
+            "point found."
         )
 
 
-        # ----------------------------------------------------
-        # MODEL INPUT
-        # ----------------------------------------------------
+        # ====================================================
+        # WEATHER INPUT
+        # ====================================================
+        #
+        # Dashboard and Early Warning now obtain live rainfall
+        # directly from Open-Meteo in the browser.
+        #
+        # Browser:
+        #
+        #     Open-Meteo
+        #          ↓
+        #     JavaScript
+        #          ↓
+        #     /predict
+        #
+        # Therefore Render does NOT need to call Open-Meteo
+        # when valid browser weather is supplied.
+        #
+        # Server-side Open-Meteo remains as a fallback for
+        # older clients or requests without weather data.
+        # ====================================================
+
+        client_weather = data.get(
+            "weather"
+        )
+
+
+        if isinstance(
+            client_weather,
+            dict
+        ):
+
+            try:
+
+                weather = {
+
+                    "rainfall_24h":
+                        round(
+                            float(
+                                client_weather[
+                                    "rainfall_24h"
+                                ]
+                            ),
+                            2
+                        ),
+
+                    "rainfall_3day":
+                        round(
+                            float(
+                                client_weather[
+                                    "rainfall_3day"
+                                ]
+                            ),
+                            2
+                        ),
+
+                    "rainfall_7day":
+                        round(
+                            float(
+                                client_weather[
+                                    "rainfall_7day"
+                                ]
+                            ),
+                            2
+                        ),
+
+                    "current_rain":
+                        round(
+                            float(
+                                client_weather.get(
+                                    "current_rain",
+                                    0
+                                )
+                                or
+                                0
+                            ),
+                            2
+                        ),
+
+                    "current_precipitation":
+                        round(
+                            float(
+                                client_weather.get(
+                                    "current_precipitation",
+                                    0
+                                )
+                                or
+                                0
+                            ),
+                            2
+                        ),
+
+                    "source":
+                        str(
+                            client_weather.get(
+                                "source",
+                                "Open-Meteo"
+                            )
+                        ),
+
+                    "mode":
+                        str(
+                            client_weather.get(
+                                "mode",
+                                "browser-live"
+                            )
+                        )
+
+                }
+
+
+                # --------------------------------------------
+                # VALIDATE WEATHER NUMBERS
+                # --------------------------------------------
+
+                for key in (
+                    "rainfall_24h",
+                    "rainfall_3day",
+                    "rainfall_7day",
+                    "current_rain",
+                    "current_precipitation"
+                ):
+
+                    if not np.isfinite(
+                        weather[key]
+                    ):
+
+                        raise ValueError(
+                            f"Invalid weather value: {key}"
+                        )
+
+
+                print(
+                    "Using browser-supplied "
+                    "Open-Meteo rainfall:",
+                    weather
+                )
+
+
+            except (
+                KeyError,
+                TypeError,
+                ValueError
+            ) as exc:
+
+                print(
+                    "Invalid browser weather "
+                    "payload; falling back "
+                    "to server weather:",
+                    repr(exc)
+                )
+
+
+                weather = get_live_rainfall(
+                    lat,
+                    lon
+                )
+
+
+        else:
+
+            print(
+                "No browser weather supplied. "
+                "Using server-side weather fallback."
+            )
+
+
+            weather = get_live_rainfall(
+                lat,
+                lon
+            )
+
+
+        # ====================================================
+        # EXACT 10 MODEL FEATURES
+        # ====================================================
 
         values = [
 
@@ -1894,17 +1872,23 @@ def predict():
                 row["soil_ph"]
             ),
 
-            weather[
-                "rainfall_24h"
-            ],
+            float(
+                weather[
+                    "rainfall_24h"
+                ]
+            ),
 
-            weather[
-                "rainfall_3day"
-            ],
+            float(
+                weather[
+                    "rainfall_3day"
+                ]
+            ),
 
-            weather[
-                "rainfall_7day"
-            ]
+            float(
+                weather[
+                    "rainfall_7day"
+                ]
+            )
 
         ]
 
@@ -1920,13 +1904,15 @@ def predict():
 
         print(
             "Model input:",
-            features.iloc[0].to_dict()
+            features.to_dict(
+                orient="records"
+            )[0]
         )
 
 
-        # ----------------------------------------------------
+        # ====================================================
         # RANDOM FOREST
-        # ----------------------------------------------------
+        # ====================================================
 
         probability = float(
 
@@ -1948,9 +1934,30 @@ def predict():
         )
 
 
-        # ----------------------------------------------------
-        # RISK CATEGORY
-        # ----------------------------------------------------
+        # ====================================================
+        # EARLY WARNING
+        # ====================================================
+
+        early_warning = early_warning_info(
+
+            weather[
+                "rainfall_24h"
+            ],
+
+            weather[
+                "rainfall_3day"
+            ],
+
+            weather[
+                "rainfall_7day"
+            ]
+
+        )
+
+
+        # ====================================================
+        # RISK LEVEL
+        # ====================================================
 
         level, css_level, summary = (
             risk_info(
@@ -1959,18 +1966,21 @@ def predict():
         )
 
 
-        # ----------------------------------------------------
-        # WARNING
-        # ----------------------------------------------------
+        # ====================================================
+        # MODEL WARNING
+        # ====================================================
 
-        if probability >= MODEL_THRESHOLD:
+        if (
+            probability
+            >=
+            MODEL_THRESHOLD
+        ):
 
             warning = (
                 "LANDSLIDE SUSCEPTIBILITY DETECTED"
             )
 
             warning_css = "high"
-
 
         else:
 
@@ -1981,29 +1991,28 @@ def predict():
             warning_css = "low"
 
 
-        elapsed = round(
+        # ====================================================
+        # PROCESSING TIME
+        # ====================================================
 
+        elapsed = round(
             time.time()
             -
-            start_time,
-
+            start,
             2
-
         )
 
 
         print(
-
-            f"Prediction complete in "
-            f"{elapsed}s | "
+            f"Prediction complete "
+            f"in {elapsed}s | "
             f"Risk={risk:.2f}%"
-
         )
 
 
-        # ----------------------------------------------------
+        # ====================================================
         # RESPONSE
-        # ----------------------------------------------------
+        # ====================================================
 
         return jsonify({
 
@@ -2018,6 +2027,9 @@ def predict():
                     risk,
                     2
                 ),
+
+            "early_warning":
+                early_warning,
 
             "probability":
                 round(
@@ -2042,20 +2054,17 @@ def predict():
 
             "latitude":
                 round(
-                    latitude,
+                    lat,
                     6
                 ),
 
             "longitude":
                 round(
-                    longitude,
+                    lon,
                     6
                 ),
 
             "summary":
-                summary,
-
-            "message":
                 summary,
 
             "reasons":
@@ -2131,6 +2140,10 @@ def predict():
                         2
                     ),
 
+                # --------------------------------------------
+                # LIVE RAINFALL
+                # --------------------------------------------
+
                 "rainfall_24h":
                     weather[
                         "rainfall_24h"
@@ -2157,32 +2170,36 @@ def predict():
                     ],
 
                 "weather_source":
-                    "Open-Meteo"
+                    weather.get(
+                        "source",
+                        "Open-Meteo"
+                    ),
+
+                "weather_mode":
+                    weather.get(
+                        "mode",
+                        "server-live"
+                    )
 
             }
 
         })
 
 
-    except Exception as error:
+    except Exception as exc:
 
         elapsed = round(
-
             time.time()
             -
-            start_time,
-
+            start,
             2
-
         )
 
 
         print(
-
-            f"PREDICTION ERROR after "
-            f"{elapsed}s:",
-            repr(error)
-
+            f"PREDICTION ERROR "
+            f"after {elapsed}s:",
+            repr(exc)
         )
 
 
@@ -2192,37 +2209,29 @@ def predict():
                 "Prediction failed.",
 
             "details":
-                str(error),
+                str(exc),
 
             "elapsed_seconds":
                 elapsed
 
         }), 500
 
-
 # ============================================================
-# LOAD EVERYTHING
+# START APPLICATION
 # ============================================================
 
 load_project()
 
 
-# ============================================================
-# RUN FLASK
-# ============================================================
-
 if __name__ == "__main__":
-
-    port= int(os.environ.get("PORT",2005))
 
     app.run(
 
         host="0.0.0.0",
 
-        port=port,
+        port=2005,
 
         debug=False,
 
         threaded=True
-
     )

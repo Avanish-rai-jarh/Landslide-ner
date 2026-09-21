@@ -2,23 +2,16 @@
 // LANDSLIDEGUARD - EARLY WARNING MONITOR
 // NER ONLY
 // ============================================================
-//
+
 // IMPORTANT:
 // This file is protected against accidental duplicate loading.
 // Your HTML previously contained early-warning.js twice.
-// ============================================================
 
 if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
 
     window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__ = true;
 
-
-    // ========================================================
-    // WAIT UNTIL HTML IS READY
-    // ========================================================
-
     document.addEventListener("DOMContentLoaded", function () {
-
 
         // ====================================================
         // HELPER
@@ -235,12 +228,10 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
 
             }
 
-
             setText(
                 warningDescription,
                 "Select a location in Northeast India to calculate its current susceptibility and rainfall signals."
             );
-
 
             setText(
                 riskValue,
@@ -251,7 +242,6 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
                 riskLevel,
                 "No assessment available."
             );
-
 
             setText(
                 rainfall24,
@@ -268,7 +258,6 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
                 "--"
             );
 
-
             setText(
                 riskScore,
                 "--"
@@ -279,12 +268,10 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
                 "--"
             );
 
-
             setText(
                 guidance,
                 "Select a location to receive location-specific monitoring information."
             );
-
 
             setText(
                 elevation,
@@ -313,18 +300,13 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
 
 
             if (riskBar) {
-
                 riskBar.style.width =
                     "0%";
-
             }
 
-
             if (rainfallBar) {
-
                 rainfallBar.style.width =
                     "0%";
-
             }
 
 
@@ -334,7 +316,6 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
                     "engine-status engine-neutral";
 
             }
-
 
             setText(
                 engineStatusTitle,
@@ -411,19 +392,23 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
 
 
             if ($("chart-risk-bar")) {
-                $("chart-risk-bar").style.width = "0%";
+                $("chart-risk-bar").style.width =
+                    "0%";
             }
 
             if ($("chart-rain24-bar")) {
-                $("chart-rain24-bar").style.width = "0%";
+                $("chart-rain24-bar").style.width =
+                    "0%";
             }
 
             if ($("chart-rain3-bar")) {
-                $("chart-rain3-bar").style.width = "0%";
+                $("chart-rain3-bar").style.width =
+                    "0%";
             }
 
             if ($("chart-rain7-bar")) {
-                $("chart-rain7-bar").style.width = "0%";
+                $("chart-rain7-bar").style.width =
+                    "0%";
             }
 
         }
@@ -440,7 +425,6 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
             const value =
                 Number(rainfall);
 
-
             if (
                 !Number.isFinite(value) ||
                 value <= 0
@@ -449,7 +433,6 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
                 return 0;
 
             }
-
 
             return Math.min(
                 100,
@@ -470,7 +453,6 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
             const value =
                 Number(rainfall);
 
-
             if (
                 !Number.isFinite(value)
             ) {
@@ -482,7 +464,6 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
 
             }
 
-
             if (value < 25) {
 
                 return {
@@ -492,7 +473,6 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
 
             }
 
-
             if (value < 50) {
 
                 return {
@@ -501,7 +481,6 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
                 };
 
             }
-
 
             return {
                 label: "HIGH",
@@ -525,7 +504,6 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
             const numericRisk =
                 Number(risk);
 
-
             const safeRisk =
                 Number.isFinite(numericRisk)
                     ? Math.max(
@@ -536,7 +514,6 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
                         )
                     )
                     : 0;
-
 
             const band24 =
                 getRainfallBand(
@@ -562,7 +539,6 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
                 engineRisk,
                 safeRisk.toFixed(1) + "%"
             );
-
 
             if (safeRisk >= 70) {
 
@@ -722,7 +698,6 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
 
             }
 
-
             setText(
                 engineStatusTitle,
                 overallTitle
@@ -750,10 +725,8 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
 
             }
 
-
             const risk =
                 Number(result.risk);
-
 
             const safeRisk =
                 Number.isFinite(risk)
@@ -765,7 +738,6 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
                         )
                     )
                     : 0;
-
 
             const environment =
                 result.environment || {};
@@ -782,20 +754,17 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
                 "Selected NER location"
             );
 
-
             setText(
                 stateName,
                 result.state ||
                 "--"
             );
 
-
             const resultLat =
                 Number(result.latitude);
 
             const resultLon =
                 Number(result.longitude);
-
 
             if (
                 Number.isFinite(resultLat) &&
@@ -821,13 +790,11 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
                 safeRisk.toFixed(1) + "%"
             );
 
-
             setText(
                 riskLevel,
                 result.level ||
                 "Risk assessment completed."
             );
-
 
             if (riskBar) {
 
@@ -835,7 +802,6 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
                     safeRisk + "%";
 
             }
-
 
             setText(
                 riskScore,
@@ -862,16 +828,16 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
                 );
 
                 if (warningLevel) {
+
                     warningLevel.className =
                         "status-high";
-                }
 
+                }
 
                 setText(
                     warningDescription,
                     "The selected location has a high prototype susceptibility score. Continued monitoring of rainfall and local conditions is recommended."
                 );
-
 
                 setText(
                     guidance,
@@ -890,16 +856,16 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
                 );
 
                 if (warningLevel) {
+
                     warningLevel.className =
                         "status-moderate";
-                }
 
+                }
 
                 setText(
                     warningDescription,
                     "The selected location has a moderate prototype susceptibility score. Continue monitoring changing environmental conditions."
                 );
-
 
                 setText(
                     guidance,
@@ -916,16 +882,16 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
                 );
 
                 if (warningLevel) {
+
                     warningLevel.className =
                         "status-low";
-                }
 
+                }
 
                 setText(
                     warningDescription,
                     "The selected location currently has a lower prototype susceptibility score."
                 );
-
 
                 setText(
                     guidance,
@@ -972,7 +938,6 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
                 safeRisk.toFixed(1) + "%"
             );
 
-
             if ($("chart-risk-bar")) {
 
                 $("chart-risk-bar").style.width =
@@ -991,7 +956,6 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
                     ? rain24.toFixed(2) + " mm"
                     : "--"
             );
-
 
             if ($("chart-rain24-bar")) {
 
@@ -1017,7 +981,6 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
                     : "--"
             );
 
-
             if ($("chart-rain3-bar")) {
 
                 $("chart-rain3-bar").style.width =
@@ -1041,7 +1004,6 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
                     ? rain7.toFixed(2) + " mm"
                     : "--"
             );
-
 
             if ($("chart-rain7-bar")) {
 
@@ -1067,14 +1029,12 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
                     : "--"
             );
 
-
             setText(
                 rainfall3,
                 Number.isFinite(rain3)
                     ? rain3.toFixed(2)
                     : "--"
             );
-
 
             setText(
                 rainfall7,
@@ -1083,14 +1043,12 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
                     : "--"
             );
 
-
             setText(
                 rainfallSignal,
                 Number.isFinite(rain24)
                     ? rain24.toFixed(1) + " mm"
                     : "--"
             );
-
 
             if (rainfallBar) {
 
@@ -1113,14 +1071,12 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
                     : "--"
             );
 
-
             setText(
                 slope,
                 environment.slope !== undefined
                     ? environment.slope + "°"
                     : "--"
             );
-
 
             setText(
                 aspect,
@@ -1129,14 +1085,12 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
                     : "--"
             );
 
-
             setText(
                 annualRainfall,
                 environment.annual_rainfall !== undefined
                     ? environment.annual_rainfall + " mm"
                     : "--"
             );
-
 
             setText(
                 soilPh,
@@ -1154,6 +1108,307 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
 
 
         // ====================================================
+        // BROWSER-SIDE OPEN-METEO RAINFALL
+        // ====================================================
+
+        const BROWSER_WEATHER_CACHE =
+            new Map();
+
+        const BROWSER_WEATHER_CACHE_TTL =
+            5 * 60 * 1000;
+
+        let LAST_BROWSER_WEATHER_REQUEST =
+            0;
+
+
+        async function getBrowserRainfall(
+            lat,
+            lon
+        ) {
+
+            const key =
+                Number(lat).toFixed(4) +
+                "," +
+                Number(lon).toFixed(4);
+
+            const now =
+                Date.now();
+
+            const cached =
+                BROWSER_WEATHER_CACHE.get(
+                    key
+                );
+
+
+            // ------------------------------------------------
+            // USE CACHE FOR FIVE MINUTES
+            // ------------------------------------------------
+
+            if (
+                cached &&
+                now - cached.time <
+                    BROWSER_WEATHER_CACHE_TTL
+            ) {
+
+                return {
+                    ...cached.data,
+                    mode:
+                        "browser-cache"
+                };
+
+            }
+
+
+            // ------------------------------------------------
+            // RATE-LIMIT BROWSER REQUESTS
+            // ------------------------------------------------
+
+            const elapsed =
+                Date.now() -
+                LAST_BROWSER_WEATHER_REQUEST;
+
+            const wait =
+                1100 -
+                elapsed;
+
+            if (wait > 0) {
+
+                await new Promise(
+                    function (resolve) {
+
+                        setTimeout(
+                            resolve,
+                            wait
+                        );
+
+                    }
+                );
+
+            }
+
+            LAST_BROWSER_WEATHER_REQUEST =
+                Date.now();
+
+
+            // ------------------------------------------------
+            // OPEN-METEO REQUEST
+            // ------------------------------------------------
+
+            const url =
+                "https://api.open-meteo.com/v1/forecast" +
+                "?latitude=" +
+                encodeURIComponent(lat) +
+                "&longitude=" +
+                encodeURIComponent(lon) +
+                "&current=rain,precipitation" +
+                "&hourly=rain" +
+                "&past_hours=168" +
+                "&forecast_hours=1" +
+                "&timezone=auto" +
+                "&cell_selection=land";
+
+
+            const response =
+                await fetch(
+                    url,
+                    {
+                        method:
+                            "GET",
+
+                        headers: {
+                            "Accept":
+                                "application/json"
+                        }
+                    }
+                );
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "Open-Meteo returned HTTP " +
+                    response.status +
+                    "."
+                );
+
+            }
+
+
+            const data =
+                await response.json();
+
+
+            const hourly =
+                data.hourly || {};
+
+
+            const rainfall =
+                Array.isArray(
+                    hourly.rain
+                )
+                    ? hourly.rain.map(
+                        Number
+                    )
+                    : [];
+
+
+            if (
+                rainfall.length < 168
+            ) {
+
+                throw new Error(
+                    "Open-Meteo did not return enough hourly rainfall data."
+                );
+
+            }
+
+
+            const cleanRainfall =
+                rainfall.map(
+                    function (value) {
+
+                        return Number.isFinite(
+                            value
+                        )
+                            ? value
+                            : 0;
+
+                    }
+                );
+
+
+            const current =
+                data.current || {};
+
+
+            // ------------------------------------------------
+            // 24 HOURS
+            // ------------------------------------------------
+
+            const rainfall24h =
+                Number(
+                    cleanRainfall
+                        .slice(-24)
+                        .reduce(
+                            function (
+                                sum,
+                                value
+                            ) {
+
+                                return (
+                                    sum +
+                                    value
+                                );
+
+                            },
+                            0
+                        )
+                        .toFixed(2)
+                );
+
+
+            // ------------------------------------------------
+            // 3 DAYS
+            // ------------------------------------------------
+
+            const rainfall3day =
+                Number(
+                    cleanRainfall
+                        .slice(-72)
+                        .reduce(
+                            function (
+                                sum,
+                                value
+                            ) {
+
+                                return (
+                                    sum +
+                                    value
+                                );
+
+                            },
+                            0
+                        )
+                        .toFixed(2)
+                );
+
+
+            // ------------------------------------------------
+            // 7 DAYS
+            // ------------------------------------------------
+
+            const rainfall7day =
+                Number(
+                    cleanRainfall
+                        .slice(-168)
+                        .reduce(
+                            function (
+                                sum,
+                                value
+                            ) {
+
+                                return (
+                                    sum +
+                                    value
+                                );
+
+                            },
+                            0
+                        )
+                        .toFixed(2)
+                );
+
+
+            const result = {
+
+                rainfall_24h:
+                    rainfall24h,
+
+                rainfall_3day:
+                    rainfall3day,
+
+                rainfall_7day:
+                    rainfall7day,
+
+                current_rain:
+                    Number(
+                        current.rain ||
+                        0
+                    ),
+
+                current_precipitation:
+                    Number(
+                        current.precipitation ||
+                        0
+                    ),
+
+                source:
+                    "Open-Meteo",
+
+                mode:
+                    "browser-live"
+
+            };
+
+
+            BROWSER_WEATHER_CACHE.set(
+                key,
+                {
+                    time:
+                        Date.now(),
+
+                    data:
+                        result
+                }
+            );
+
+
+            return result;
+
+        }
+
+
+        // ====================================================
         // PREDICTION
         // ====================================================
 
@@ -1163,7 +1418,7 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
         ) {
 
             setStatus(
-                "Collecting environmental data and running AI assessment..."
+                "Fetching live rainfall data..."
             );
 
 
@@ -1182,6 +1437,31 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
 
 
             try {
+
+                // ------------------------------------------------
+                // GET LIVE RAINFALL IN BROWSER
+                // ------------------------------------------------
+
+                const weather =
+                    await getBrowserRainfall(
+                        lat,
+                        lon
+                    );
+
+
+                setStatus(
+                    weather.mode ===
+                        "browser-cache"
+
+                        ? "Using recent cached rainfall data. Running AI assessment..."
+
+                        : "Live rainfall received. Running AI assessment..."
+                );
+
+
+                // ------------------------------------------------
+                // SEND LOCATION + WEATHER TO FLASK
+                // ------------------------------------------------
 
                 const controller =
                     new AbortController();
@@ -1220,7 +1500,10 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
                                         lat,
 
                                     longitude:
-                                        lon
+                                        lon,
+
+                                    weather:
+                                        weather
 
                                 }),
 
@@ -1238,6 +1521,7 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
 
                 let result;
 
+
                 try {
 
                     result =
@@ -1254,25 +1538,77 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
                 }
 
 
+                // ------------------------------------------------
+                // NER SUPPORT CHECK
+                // ------------------------------------------------
+
+                if (
+                    response.status === 403 ||
+                    result.supported === false
+                ) {
+
+                    resetPage();
+
+
+                    setStatus(
+                        "This location is outside the supported Northeast India region."
+                    );
+
+
+                    setText(
+                        warningLevel,
+                        "NER ONLY"
+                    );
+
+
+                    if (warningLevel) {
+
+                        warningLevel.className =
+                            "status-moderate";
+
+                    }
+
+
+                    setText(
+                        warningDescription,
+                        "Early-warning monitoring is currently limited to Arunachal Pradesh, Assam, Manipur, Meghalaya, Mizoram, Nagaland, Sikkim and Tripura."
+                    );
+
+
+                    return;
+
+                }
+
+
+                // ------------------------------------------------
+                // SERVER ERROR
+                // ------------------------------------------------
+
                 if (!response.ok) {
 
                     throw new Error(
 
                         result.details ||
                         result.error ||
-                        "Prediction failed."
+                        "Prediction failed with HTTP " +
+                        response.status +
+                        "."
 
                     );
 
                 }
 
 
+                // ------------------------------------------------
+                // SHOW RESULT
+                // ------------------------------------------------
+
                 showResult(
                     result
                 );
 
-
             }
+
 
             catch (error) {
 
@@ -1284,9 +1620,10 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
 
                 setStatus(
 
-                    error.name === "AbortError"
+                    error.name ===
+                        "AbortError"
 
-                        ? "Weather/AI request timed out. Please try again."
+                        ? "AI request timed out. Please try again."
 
                         : error.message ||
                           "Prediction failed."
@@ -1314,6 +1651,7 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
                 );
 
             }
+
 
             finally {
 
@@ -1420,6 +1758,7 @@ if (!window.__LANDSLIDEGUARD_EARLY_WARNING_LOADED__) {
 
 
                 let result;
+
 
                 try {
 
