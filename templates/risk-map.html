@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Risk Map | LandslideGuard
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='risk-map.css') }}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    >
+
+</head>
+
+<body>
+
+<!-- =========================================================
+     NAVBAR
+     ========================================================= -->
+
+<nav class="nav">
+
+    <a
+        class="brand"
+        href="/"
+    >
+        ◈ Landslide<span>Guard</span>
+    </a>
+
+
+    <div class="nav-links">
+
+        <a href="/">
+            Dashboard
+        </a>
+
+        <a
+            href="/risk-map"
+            class="active"
+        >
+            Risk Map
+        </a>
+
+        <a href="/early-warning">
+            Early Warning
+        </a>
+
+        <a href="/sources">
+            Data Sources
+        </a>
+
+        <a href="/about">
+            About
+        </a>
+
+    </div>
+
+
+    <div class="nav-right">
+
+        <span class="live">
+            ● AI MONITORING
+        </span>
+
+        <button id="about">
+            How it works
+        </button>
+
+    </div>
+
+</nav>
+
+
+<!-- =========================================================
+     PAGE
+     ========================================================= -->
+
+<main class="page">
+
+    <section class="page-header">
+
+        <span class="eyebrow">
+            NORTHEAST INDIA · GIS RISK MONITOR
+        </span>
+
+        <h1>
+            Explore landslide
+            <span>susceptibility.</span>
+        </h1>
+
+        <p>
+            Select a location inside the highlighted
+            Northeast India region to generate a
+            machine-learning based landslide
+            susceptibility assessment.
+        </p>
+
+    </section>
+
+
+    <!-- =====================================================
+         SEARCH
+         ===================================================== -->
+
+    <section>
+
+        <div class="search-box">
+
+            <input
+                id="location-search"
+                type="text"
+                placeholder="Search Northeast India — e.g. Shillong, Sikkim, Nagaland"
+            >
+
+            <button id="search-button">
+                Search
+            </button>
+
+        </div>
+
+        <div id="search-status">
+            Northeast India boundaries are loading...
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         MAIN CONTENT
+         ===================================================== -->
+
+    <section class="risk-layout">
+
+
+        <!-- =================================================
+             MAP
+             ================================================= -->
+
+        <div>
+
+            <div class="map-card">
+
+                <div class="map-header">
+
+                    <div>
+
+                        <small>
+                            GEOSPATIAL MONITOR
+                        </small>
+
+                        <h2>
+                            Northeast India Risk Map
+                        </h2>
+
+                    </div>
+
+
+                    <div class="map-hint">
+                        📍 Click inside highlighted region
+                    </div>
+
+                </div>
+
+
+                <div id="risk-map"></div>
+
+
+                <div class="map-legend">
+
+                    <div class="legend-item">
+
+                        <span class="legend-dot legend-ner"></span>
+
+                        NER Boundary
+
+                    </div>
+
+
+                    <div class="legend-item">
+
+                        <span class="legend-dot legend-low"></span>
+
+                        Low Risk
+
+                    </div>
+
+
+                    <div class="legend-item">
+
+                        <span class="legend-dot legend-moderate"></span>
+
+                        Moderate Risk
+
+                    </div>
+
+
+                    <div class="legend-item">
+
+                        <span class="legend-dot legend-high"></span>
+
+                        High Risk
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =============================================
+                 RAINFALL
+                 ============================================= -->
+
+            <div class="card" style="margin-top:16px;">
+
+                <span class="card-label">
+                    DYNAMIC RAINFALL
+                </span>
+
+                <h3 style="margin-top:0;">
+                    Live Rainfall Used by AI Model
+                </h3>
+
+
+                <div class="rainfall-grid">
+
+                    <div class="rainfall-item">
+
+                        <span>
+                            LAST 24 HOURS
+                        </span>
+
+                        <strong id="rainfall-24h">
+                            --
+                        </strong>
+
+                        <small>
+                            mm
+                        </small>
+
+                    </div>
+
+
+                    <div class="rainfall-item">
+
+                        <span>
+                            LAST 3 DAYS
+                        </span>
+
+                        <strong id="rainfall-3day">
+                            --
+                        </strong>
+
+                        <small>
+                            mm
+                        </small>
+
+                    </div>
+
+
+                    <div class="rainfall-item">
+
+                        <span>
+                            LAST 7 DAYS
+                        </span>
+
+                        <strong id="rainfall-7day">
+                            --
+                        </strong>
+
+                        <small>
+                            mm
+                        </small>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             SIDEBAR
+             ================================================= -->
+
+        <aside class="sidebar">
+
+
+            <!-- =============================================
+                 LOCATION
+                 ============================================= -->
+
+            <div class="card">
+
+                <span class="card-label">
+                    SELECTED LOCATION
+                </span>
+
+                <h2
+                    id="location-name"
+                    class="location-name"
+                >
+                    No location selected
+                </h2>
+
+
+                <div class="info-grid">
+
+                    <div class="info-box">
+
+                        <span>
+                            STATE
+                        </span>
+
+                        <strong id="state-name">
+                            --
+                        </strong>
+
+                    </div>
+
+
+                    <div class="info-box">
+
+                        <span>
+                            LATITUDE
+                        </span>
+
+                        <strong id="latitude">
+                            --
+                        </strong>
+
+                    </div>
+
+
+                    <div class="info-box">
+
+                        <span>
+                            LONGITUDE
+                        </span>
+
+                        <strong id="longitude">
+                            --
+                        </strong>
+
+                    </div>
+
+
+                    <div class="info-box">
+
+                        <span>
+                            MODEL
+                        </span>
+
+                        <strong>
+                            Random Forest
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =============================================
+                 RISK
+                 ============================================= -->
+
+            <div class="card risk-card">
+
+                <span class="card-label">
+                    AI SUSCEPTIBILITY ASSESSMENT
+                </span>
+
+
+                <div
+                    class="gauge"
+                    id="gauge"
+                >
+
+                    <div class="gauge-inner">
+
+                        <span id="risk-value">
+                            --
+                        </span>
+
+                        <span
+                            id="risk-level"
+                            class="risk-neutral"
+                        >
+                            NO DATA
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    id="warning"
+                    class="warning warning-neutral"
+                >
+                    Select a NER location to generate assessment.
+                </div>
+
+            </div>
+
+
+            <!-- =============================================
+                 ANALYSIS
+                 ============================================= -->
+
+            <div class="card">
+
+                <span class="card-label">
+                    RISK ANALYSIS
+                </span>
+
+                <h3 id="analysis-title">
+                    Waiting for location
+                </h3>
+
+                <p
+                    id="analysis-text"
+                    class="analysis-text"
+                >
+                    Select or search a location inside
+                    Northeast India.
+                </p>
+
+                <ul
+                    id="reasons"
+                    class="reasons"
+                ></ul>
+
+            </div>
+
+
+            <!-- =============================================
+                 ENVIRONMENT
+                 ============================================= -->
+
+            <div class="card">
+
+                <span class="card-label">
+                    ENVIRONMENTAL CONDITIONS
+                </span>
+
+
+                <div class="environment-grid">
+
+                    <div class="environment-item">
+
+                        <span>
+                            ELEVATION
+                        </span>
+
+                        <strong id="env-elevation">
+                            --
+                        </strong>
+
+                        m
+
+                    </div>
+
+
+                    <div class="environment-item">
+
+                        <span>
+                            SLOPE
+                        </span>
+
+                        <strong id="env-slope">
+                            --
+                        </strong>
+
+                        °
+
+                    </div>
+
+
+                    <div class="environment-item">
+
+                        <span>
+                            ASPECT
+                        </span>
+
+                        <strong id="env-aspect">
+                            --
+                        </strong>
+
+                        °
+
+                    </div>
+
+
+                    <div class="environment-item">
+
+                        <span>
+                            ANNUAL RAINFALL
+                        </span>
+
+                        <strong id="env-rainfall">
+                            --
+                        </strong>
+
+                        mm
+
+                    </div>
+
+
+                    <div class="environment-item">
+
+                        <span>
+                            SOIL CLAY
+                        </span>
+
+                        <strong id="env-clay">
+                            --
+                        </strong>
+
+                        %
+
+                    </div>
+
+
+                    <div class="environment-item">
+
+                        <span>
+                            SOIL SAND
+                        </span>
+
+                        <strong id="env-sand">
+                            --
+                        </strong>
+
+                        %
+
+                    </div>
+
+
+                    <div class="environment-item">
+
+                        <span>
+                            SOIL pH
+                        </span>
+
+                        <strong id="env-ph">
+                            --
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </aside>
+
+    </section>
+
+
+    <footer class="footer">
+
+        LandslideGuard · NER-focused landslide
+        susceptibility monitoring prototype
+
+    </footer>
+
+</main>
+
+
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+></script>
+
+<script
+    src="{{ url_for('static', filename='risk-map.js') }}"
+></script>
+
+</body>
+
+</html>

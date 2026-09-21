@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Data Sources | LandslideGuard
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='sources.css') }}"
+    >
+
+</head>
+
+
+<body>
+
+
+<!-- =========================================================
+     NAVBAR
+     ========================================================= -->
+
+<nav class="nav">
+
+    <a class="brand" href="/">
+        ◈ Landslide<span>Guard</span>
+    </a>
+
+
+    <div class="nav-links" id="navLinks">
+
+        <a href="/">
+            Dashboard
+        </a>
+
+        <a href="/early-warning">
+            Early Warning
+        </a>
+
+        <a
+            href="/sources"
+            class="active"
+        >
+            Data Sources
+        </a>
+
+        <a href="/about">
+            About
+        </a>
+
+    </div>
+
+
+    <div class="nav-right">
+
+        <span class="live">
+            ● AI MONITORING
+        </span>
+
+    </div>
+
+
+    <button
+        class="menu-btn"
+        id="menuBtn"
+        aria-label="Open navigation menu"
+        aria-expanded="false"
+    >
+        ☰
+    </button>
+
+</nav>
+
+
+
+<!-- =========================================================
+     MAIN PAGE
+     ========================================================= -->
+
+<main class="sources-page">
+
+
+    <!-- =====================================================
+         PAGE HEADER
+         ===================================================== -->
+
+    <section class="sources-header">
+
+        <div class="header-content">
+
+            <span class="eyebrow">
+                DATA & PROVENANCE
+            </span>
+
+            <h1>
+                Know where the data comes from.
+            </h1>
+
+            <p>
+                LandslideGuard combines terrain, soil,
+                geographic and live rainfall information
+                to generate landslide susceptibility
+                assessments across the North Eastern
+                Region of India.
+            </p>
+
+        </div>
+
+
+        <div class="scope-box">
+
+            <span>
+                PROJECT SCOPE
+            </span>
+
+            <strong>
+                NER • INDIA
+            </strong>
+
+            <small>
+                8 North Eastern States
+            </small>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         SOURCE CARDS
+         ===================================================== -->
+
+    <section class="sources-grid">
+
+
+        <!-- =================================================
+             SOURCE 01
+             ================================================= -->
+
+        <article class="source-card">
+
+            <div class="source-card-top">
+
+                <div class="source-icon">
+                    ☁
+                </div>
+
+                <span class="source-category">
+                    LIVE WEATHER
+                </span>
+
+            </div>
+
+
+            <h2>
+                Open-Meteo
+            </h2>
+
+
+            <p>
+                Live precipitation and weather information
+                used to monitor recent rainfall conditions
+                at the selected location.
+            </p>
+
+
+            <div class="data-tags">
+
+                <span>
+                    24h rainfall
+                </span>
+
+                <span>
+                    3-day rainfall
+                </span>
+
+                <span>
+                    7-day rainfall
+                </span>
+
+            </div>
+
+
+            <div class="source-status">
+
+                <span>
+                    Live API
+                </span>
+
+                <strong>
+                    ● ACTIVE
+                </strong>
+
+            </div>
+
+        </article>
+
+
+
+        <!-- =================================================
+             SOURCE 02
+             ================================================= -->
+
+        <article class="source-card">
+
+            <div class="source-card-top">
+
+                <div class="source-icon">
+                    ◒
+                </div>
+
+                <span class="source-category">
+                    TERRAIN
+                </span>
+
+            </div>
+
+
+            <h2>
+                Elevation & Terrain
+            </h2>
+
+
+            <p>
+                Terrain variables represent physical
+                characteristics of the landscape used by
+                the susceptibility model.
+            </p>
+
+
+            <div class="data-tags">
+
+                <span>
+                    Elevation
+                </span>
+
+                <span>
+                    Slope
+                </span>
+
+                <span>
+                    Aspect
+                </span>
+
+            </div>
+
+
+            <div class="source-status">
+
+                <span>
+                    Model input
+                </span>
+
+                <strong>
+                    ● USED
+                </strong>
+
+            </div>
+
+        </article>
+
+
+
+        <!-- =================================================
+             SOURCE 03
+             ================================================= -->
+
+        <article class="source-card">
+
+            <div class="source-card-top">
+
+                <div class="source-icon">
+                    ◫
+                </div>
+
+                <span class="source-category">
+                    SOIL DATA
+                </span>
+
+            </div>
+
+
+            <h2>
+                SoilGrids
+            </h2>
+
+
+            <p>
+                Soil characteristics are included as
+                environmental variables for the landslide
+                susceptibility assessment.
+            </p>
+
+
+            <div class="data-tags">
+
+                <span>
+                    Clay
+                </span>
+
+                <span>
+                    Sand
+                </span>
+
+                <span>
+                    Soil pH
+                </span>
+
+            </div>
+
+
+            <div class="source-status">
+
+                <span>
+                    Soil dataset
+                </span>
+
+                <strong>
+                    ● USED
+                </strong>
+
+            </div>
+
+        </article>
+
+
+
+        <!-- =================================================
+             SOURCE 04
+             ================================================= -->
+
+        <article class="source-card">
+
+            <div class="source-card-top">
+
+                <div class="source-icon">
+                    ▦
+                </div>
+
+                <span class="source-category">
+                    LAND COVER
+                </span>
+
+            </div>
+
+
+            <h2>
+                UGLC
+            </h2>
+
+
+            <p>
+                Land-cover information is maintained within
+                the project's environmental data resources
+                for geographic analysis.
+            </p>
+
+
+            <div class="data-tags">
+
+                <span>
+                    Land cover
+                </span>
+
+                <span>
+                    Geographic data
+                </span>
+
+            </div>
+
+
+            <div class="source-status">
+
+                <span>
+                    Project dataset
+                </span>
+
+                <strong>
+                    ● USED
+                </strong>
+
+            </div>
+
+        </article>
+
+
+
+        <!-- =================================================
+             SOURCE 05
+             ================================================= -->
+
+        <article class="source-card">
+
+            <div class="source-card-top">
+
+                <div class="source-icon">
+                    ◈
+                </div>
+
+                <span class="source-category">
+                    GEOGRAPHY
+                </span>
+
+            </div>
+
+
+            <h2>
+                NER State Boundaries
+            </h2>
+
+
+            <p>
+                Geographic boundary data is used to display
+                and identify the eight states of India's
+                North Eastern Region.
+            </p>
+
+
+            <div class="state-tags">
+
+                <span>
+                    Arunachal Pradesh
+                </span>
+
+                <span>
+                    Assam
+                </span>
+
+                <span>
+                    Manipur
+                </span>
+
+                <span>
+                    Meghalaya
+                </span>
+
+                <span>
+                    Mizoram
+                </span>
+
+                <span>
+                    Nagaland
+                </span>
+
+                <span>
+                    Sikkim
+                </span>
+
+                <span>
+                    Tripura
+                </span>
+
+            </div>
+
+
+            <div class="source-status">
+
+                <span>
+                    GeoJSON
+                </span>
+
+                <strong>
+                    ● ACTIVE
+                </strong>
+
+            </div>
+
+        </article>
+
+
+
+        <!-- =================================================
+             SOURCE 06
+             ================================================= -->
+
+        <article class="source-card">
+
+            <div class="source-card-top">
+
+                <div class="source-icon ai-icon">
+                    AI
+                </div>
+
+                <span class="source-category">
+                    MACHINE LEARNING
+                </span>
+
+            </div>
+
+
+            <h2>
+                Random Forest
+            </h2>
+
+
+            <p>
+                The trained machine-learning model evaluates
+                environmental features to estimate landslide
+                susceptibility for the selected location.
+            </p>
+
+
+            <div class="data-tags">
+
+                <span>
+                    Elevation
+                </span>
+
+                <span>
+                    Slope
+                </span>
+
+                <span>
+                    Aspect
+                </span>
+
+                <span>
+                    Rainfall
+                </span>
+
+                <span>
+                    Soil
+                </span>
+
+            </div>
+
+
+            <div class="source-status">
+
+                <span>
+                    AI engine
+                </span>
+
+                <strong>
+                    ● ACTIVE
+                </strong>
+
+            </div>
+
+        </article>
+
+
+    </section>
+
+
+
+    <!-- =====================================================
+         DATA PIPELINE
+         ===================================================== -->
+
+    <section class="pipeline-section">
+
+
+        <div class="section-heading">
+
+            <span class="eyebrow">
+                DATA PIPELINE
+            </span>
+
+            <h2>
+                From data to susceptibility.
+            </h2>
+
+            <p>
+                Multiple environmental signals are prepared
+                and evaluated before the final assessment is
+                displayed.
+            </p>
+
+        </div>
+
+
+        <div class="pipeline">
+
+
+            <!-- STEP 1 -->
+
+            <div class="pipeline-step">
+
+                <div class="step-number">
+                    01
+                </div>
+
+                <h3>
+                    Data Sources
+                </h3>
+
+                <p>
+                    Rainfall, terrain, soil and geographic
+                    information.
+                </p>
+
+            </div>
+
+
+            <div class="pipeline-arrow">
+                →
+            </div>
+
+
+            <!-- STEP 2 -->
+
+            <div class="pipeline-step">
+
+                <div class="step-number">
+                    02
+                </div>
+
+                <h3>
+                    Feature Preparation
+                </h3>
+
+                <p>
+                    Location matching and preparation of
+                    environmental model inputs.
+                </p>
+
+            </div>
+
+
+            <div class="pipeline-arrow">
+                →
+            </div>
+
+
+            <!-- STEP 3 -->
+
+            <div class="pipeline-step">
+
+                <div class="step-number">
+                    03
+                </div>
+
+                <h3>
+                    Random Forest
+                </h3>
+
+                <p>
+                    The trained model evaluates the
+                    environmental feature set.
+                </p>
+
+            </div>
+
+
+            <div class="pipeline-arrow">
+                →
+            </div>
+
+
+            <!-- STEP 4 -->
+
+            <div class="pipeline-step">
+
+                <div class="step-number">
+                    04
+                </div>
+
+                <h3>
+                    Risk Assessment
+                </h3>
+
+                <p>
+                    The system displays a susceptibility
+                    percentage and category.
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         TRANSPARENCY
+         ===================================================== -->
+
+    <section class="transparency-card">
+
+        <div class="transparency-mark">
+            !
+        </div>
+
+
+        <div>
+
+            <span class="eyebrow">
+                IMPORTANT
+            </span>
+
+            <h2>
+                Understanding the output.
+            </h2>
+
+            <p>
+                LandslideGuard is a prototype monitoring and
+                research system. Its susceptibility result
+                should be considered together with current
+                environmental conditions and local ground
+                information. Rainfall indicators shown by
+                the prototype are intended for monitoring
+                and are not validated emergency trigger
+                thresholds.
+            </p>
+
+        </div>
+
+    </section>
+
+
+</main>
+
+
+
+<!-- =========================================================
+     FOOTER
+     ========================================================= -->
+
+<footer>
+
+    <div class="footer-brand">
+        ◈ Landslide<span>Guard</span>
+    </div>
+
+    <p>
+        AI-based landslide risk monitoring for
+        North Eastern India.
+    </p>
+
+</footer>
+
+
+<script src="{{ url_for('static', filename='sources.js') }}"></script>
+
+</body>
+
+</html>

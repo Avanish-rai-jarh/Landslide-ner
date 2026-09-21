@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        About | LandslideGuard
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='about.css') }}"
+    >
+
+</head>
+
+
+<body>
+
+
+<!-- =========================================================
+     NAVBAR
+     ========================================================= -->
+
+<nav class="nav">
+
+    <a class="brand" href="/">
+        ◈ Landslide<span>Guard</span>
+    </a>
+
+
+    <div class="nav-links" id="navLinks">
+
+        <a href="/">
+            Dashboard
+        </a>
+
+        <a href="/early-warning">
+            Early Warning
+        </a>
+
+        <a href="/sources">
+            Data Sources
+        </a>
+
+        <a
+            href="/about"
+            class="active"
+        >
+            About
+        </a>
+
+    </div>
+
+
+    <div class="nav-right">
+
+        <span class="live">
+            ● AI MONITORING
+        </span>
+
+    </div>
+
+    <button
+        class="menu-btn"
+        id="menuBtn"
+        aria-label="Open navigation menu"
+        aria-expanded="false"
+    >
+        ☰
+    </button>
+
+</nav>
+
+
+
+<!-- =========================================================
+     MAIN
+     ========================================================= -->
+
+<main class="about-page">
+
+
+    <!-- =====================================================
+         HERO
+         ===================================================== -->
+
+    <section class="about-hero">
+
+        <div class="hero-content">
+
+            <span class="eyebrow">
+                ABOUT LANDSLIDEGUARD
+            </span>
+
+            <h1>
+                AI-based landslide
+                monitoring for
+                North Eastern India.
+            </h1>
+
+            <p>
+                LandslideGuard is a prototype system that
+                combines environmental data, live rainfall
+                information and machine learning to estimate
+                landslide susceptibility at selected
+                locations across the North Eastern Region
+                of India.
+            </p>
+
+        </div>
+
+
+        <div class="hero-status">
+
+            <div class="status-dot">
+                ●
+            </div>
+
+            <span>
+                NER MONITORING
+            </span>
+
+            <strong>
+                PROTOTYPE
+            </strong>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         PROJECT PURPOSE
+         ===================================================== -->
+
+    <section class="purpose-section">
+
+        <div class="section-label">
+            01 / PURPOSE
+        </div>
+
+
+        <div class="purpose-content">
+
+            <h2>
+                Turning environmental signals
+                into understandable risk information.
+            </h2>
+
+            <p>
+                Landslide risk can depend on multiple
+                environmental characteristics. LandslideGuard
+                brings these signals together into a single
+                interface so that users can explore a location,
+                view its environmental context and inspect the
+                model's susceptibility assessment.
+            </p>
+
+            <p>
+                The current prototype is specifically designed
+                for the North Eastern Region of India and
+                covers Arunachal Pradesh, Assam, Manipur,
+                Meghalaya, Mizoram, Nagaland, Sikkim and
+                Tripura.
+            </p>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         HOW THE SYSTEM WORKS
+         ===================================================== -->
+
+    <section class="system-section">
+
+        <div class="section-heading">
+
+            <span class="eyebrow">
+                SYSTEM OVERVIEW
+            </span>
+
+            <h2>
+                How LandslideGuard works.
+            </h2>
+
+            <p>
+                The system follows a location-based workflow
+                from environmental data to susceptibility
+                assessment.
+            </p>
+
+        </div>
+
+
+        <div class="system-grid">
+
+
+            <article class="system-card">
+
+                <span class="system-number">
+                    01
+                </span>
+
+                <div class="system-icon">
+                    ◈
+                </div>
+
+                <h3>
+                    Select a Location
+                </h3>
+
+                <p>
+                    A user can search for a location or
+                    interact with the NER map.
+                </p>
+
+            </article>
+
+
+
+            <article class="system-card">
+
+                <span class="system-number">
+                    02
+                </span>
+
+                <div class="system-icon">
+                    ◒
+                </div>
+
+                <h3>
+                    Gather Environmental Data
+                </h3>
+
+                <p>
+                    Terrain, soil and rainfall information
+                    are combined for the selected location.
+                </p>
+
+            </article>
+
+
+
+            <article class="system-card">
+
+                <span class="system-number">
+                    03
+                </span>
+
+                <div class="system-icon ai">
+                    AI
+                </div>
+
+                <h3>
+                    Run the Model
+                </h3>
+
+                <p>
+                    A trained Random Forest model evaluates
+                    the environmental feature set.
+                </p>
+
+            </article>
+
+
+
+            <article class="system-card">
+
+                <span class="system-number">
+                    04
+                </span>
+
+                <div class="system-icon">
+                    %
+                </div>
+
+                <h3>
+                    Display Susceptibility
+                </h3>
+
+                <p>
+                    The result is presented as a susceptibility
+                    percentage and risk category.
+                </p>
+
+            </article>
+
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         NER SCOPE
+         ===================================================== -->
+
+    <section class="ner-section">
+
+        <div class="section-label">
+            02 / NER SCOPE
+        </div>
+
+
+        <div class="ner-content">
+
+            <div>
+
+                <span class="eyebrow">
+                    NORTH EASTERN REGION
+                </span>
+
+                <h2>
+                    Built specifically for
+                    the NER.
+                </h2>
+
+                <p>
+                    The prototype focuses on the eight states
+                    that form India's North Eastern Region.
+                    This regional scope allows the system and
+                    its environmental datasets to remain focused
+                    on the intended geographic area.
+                </p>
+
+            </div>
+
+
+            <div class="states">
+
+                <div class="state">
+                    <span>01</span>
+                    Arunachal Pradesh
+                </div>
+
+                <div class="state">
+                    <span>02</span>
+                    Assam
+                </div>
+
+                <div class="state">
+                    <span>03</span>
+                    Manipur
+                </div>
+
+                <div class="state">
+                    <span>04</span>
+                    Meghalaya
+                </div>
+
+                <div class="state">
+                    <span>05</span>
+                    Mizoram
+                </div>
+
+                <div class="state">
+                    <span>06</span>
+                    Nagaland
+                </div>
+
+                <div class="state">
+                    <span>07</span>
+                    Sikkim
+                </div>
+
+                <div class="state">
+                    <span>08</span>
+                    Tripura
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         TECHNOLOGY
+         ===================================================== -->
+
+    <section class="technology-section">
+
+        <div class="section-heading">
+
+            <span class="eyebrow">
+                TECHNOLOGY
+            </span>
+
+            <h2>
+                Technology behind the prototype.
+            </h2>
+
+        </div>
+
+
+        <div class="technology-grid">
+
+
+            <div class="technology-item">
+
+                <strong>
+                    Python
+                </strong>
+
+                <span>
+                    Data processing & ML
+                </span>
+
+            </div>
+
+
+            <div class="technology-item">
+
+                <strong>
+                    Flask
+                </strong>
+
+                <span>
+                    Backend API
+                </span>
+
+            </div>
+
+
+            <div class="technology-item">
+
+                <strong>
+                    Random Forest
+                </strong>
+
+                <span>
+                    Susceptibility model
+                </span>
+
+            </div>
+
+
+            <div class="technology-item">
+
+                <strong>
+                    Leaflet
+                </strong>
+
+                <span>
+                    Interactive mapping
+                </span>
+
+            </div>
+
+
+            <div class="technology-item">
+
+                <strong>
+                    JavaScript
+                </strong>
+
+                <span>
+                    Frontend interaction
+                </span>
+
+            </div>
+
+
+            <div class="technology-item">
+
+                <strong>
+                    Open-Meteo
+                </strong>
+
+                <span>
+                    Live rainfall data
+                </span>
+
+            </div>
+
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         LIMITATIONS
+         ===================================================== -->
+
+    <section class="limitations-section">
+
+        <div class="section-label">
+            03 / PROTOTYPE STATUS
+        </div>
+
+
+        <div class="limitation-card">
+
+            <div class="limitation-icon">
+                !
+            </div>
+
+
+            <div>
+
+                <span class="eyebrow">
+                    IMPORTANT
+                </span>
+
+                <h2>
+                    Prototype, not an operational
+                    emergency-warning service.
+                </h2>
+
+                <p>
+                    LandslideGuard currently provides an
+                    AI-based susceptibility assessment together
+                    with environmental and live rainfall
+                    information. The prototype should not be
+                    interpreted as an official emergency alert
+                    system.
+                </p>
+
+                <p>
+                    Operational early warning would require
+                    further validation, calibrated uncertainty,
+                    validated rainfall and soil-moisture
+                    thresholds, forecasting capability and
+                    reliable alert-delivery infrastructure.
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         VISION
+         ===================================================== -->
+
+    <section class="vision-section">
+
+        <span class="eyebrow">
+            PROJECT DIRECTION
+        </span>
+
+        <h2>
+            From susceptibility mapping
+            toward informed monitoring.
+        </h2>
+
+        <p>
+            The prototype provides a foundation for combining
+            machine learning and environmental monitoring
+            into a location-focused landslide information
+            system for the North Eastern Region.
+        </p>
+
+    </section>
+
+
+</main>
+
+
+
+<!-- =========================================================
+     FOOTER
+     ========================================================= -->
+
+<footer>
+
+    <div class="footer-brand">
+        ◈ Landslide<span>Guard</span>
+    </div>
+
+    <p>
+        AI-based landslide risk monitoring for
+        North Eastern India.
+    </p>
+
+</footer>
+
+<script src="{{ url_for('static', filename='about.js') }}"></script>
+
+</body>
+
+</html>

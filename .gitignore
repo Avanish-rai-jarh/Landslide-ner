@@ -1,0 +1,8 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+
+# large dataset filesn
+data/UGLC_point.csv
+data/training_points.csv

@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Early Warning | LandslideGuard
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='early-warning.css') }}"
+    >
+
+</head>
+
+
+<body>
+
+
+<!-- =========================================================
+     NAVBAR
+     ========================================================= -->
+
+<nav class="nav">
+
+    <a
+        class="brand"
+        href="/"
+    >
+        ◈ Landslide<span>Guard</span>
+    </a>
+
+
+    <div
+        class="nav-links"
+        id="navLinks"
+    >
+
+        <a href="/">
+            Dashboard
+        </a>
+
+        <a
+            href="/early-warning"
+            class="active"
+        >
+            Early Warning
+        </a>
+
+        <a href="/sources">
+            Data Sources
+        </a>
+
+        <a href="/about">
+            About
+        </a>
+
+    </div>
+
+
+    <div class="nav-right">
+
+        <span class="live">
+            ● AI MONITORING
+        </span>
+
+        <button id="about">
+            How it works
+        </button>
+
+    </div>
+
+
+    <!-- MOBILE MENU BUTTON -->
+
+    <button
+        type="button"
+        class="menu-btn"
+        id="menuBtn"
+        aria-label="Open navigation menu"
+        aria-expanded="false"
+    >
+        ☰
+    </button>
+
+</nav>
+
+
+<!-- =========================================================
+     PAGE
+     ========================================================= -->
+
+<main class="page">
+
+
+    <section class="page-header">
+
+        <span class="eyebrow">
+            NER · EARLY-WARNING MONITOR
+        </span>
+
+
+        <h1>
+            Monitor landslide
+            <span>warning signals.</span>
+        </h1>
+
+
+        <p>
+            Combine location-specific susceptibility with
+            current rainfall information to monitor conditions
+            across the North Eastern Region.
+        </p>
+
+    </section>
+
+
+    <!-- =====================================================
+         MONITOR STATUS
+         ===================================================== -->
+
+    <div class="monitor-bar">
+
+        <div class="monitor-status">
+
+            <span class="status-dot"></span>
+
+            <strong>
+                LIVE MONITORING AVAILABLE
+            </strong>
+
+        </div>
+
+
+        <div class="monitor-source">
+
+            Rainfall source:
+
+            <strong>
+                Open-Meteo
+            </strong>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         SEARCH
+         ===================================================== -->
+
+    <div class="search-box">
+
+        <input
+            id="location-search"
+            type="text"
+            placeholder="Search Northeast India — e.g. Shillong, Gangtok, Kohima"
+        >
+
+
+        <button id="search-button">
+            Monitor Location
+        </button>
+
+    </div>
+
+
+    <div id="search-status">
+        Search for a supported NER location to begin monitoring.
+    </div>
+
+
+    <!-- =====================================================
+         MAIN WARNING LAYOUT
+         ===================================================== -->
+
+    <section class="warning-layout">
+
+
+        <!-- =================================================
+             LEFT COLUMN
+             ================================================= -->
+
+        <div>
+
+
+            <!-- =============================================
+                 LOCATION
+                 ============================================= -->
+
+            <div class="card">
+
+                <span class="card-label">
+                    MONITORED LOCATION
+                </span>
+
+
+                <h2 id="location-name">
+                    No location selected
+                </h2>
+
+
+                <div class="location-card">
+
+
+                    <div class="location-value">
+
+                        <span>
+                            STATE
+                        </span>
+
+                        <strong id="state-name">
+                            --
+                        </strong>
+
+                    </div>
+
+
+                    <div class="location-value">
+
+                        <span>
+                            COORDINATES
+                        </span>
+
+                        <strong id="coordinates">
+                            --
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =============================================
+                 WARNING STATUS
+                 ============================================= -->
+
+            <div class="card">
+
+                <span class="card-label">
+                    CURRENT MONITORING STATUS
+                </span>
+
+
+                <div class="alert-panel">
+
+                    <div class="alert-status">
+
+                        <div class="alert-icon">
+                            ⚠
+                        </div>
+
+
+                        <div>
+
+                            <h2
+                                id="warning-level"
+                                class="status-neutral"
+                            >
+                                NO LOCATION
+                            </h2>
+
+                        </div>
+
+                    </div>
+
+
+                    <p id="warning-description">
+                        Select a location in Northeast India
+                        to calculate its current susceptibility
+                        and rainfall signals.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- =============================================
+                 RAINFALL
+                 ============================================= -->
+
+            <div class="card">
+
+                <span class="card-label">
+                    LIVE RAINFALL SIGNAL
+                </span>
+
+
+                <h2>
+                    Recent rainfall accumulation
+                </h2>
+
+
+                <div class="rainfall-grid">
+
+
+                    <div class="rainfall-item">
+
+                        <span>
+                            LAST 24 HOURS
+                        </span>
+
+                        <strong id="rainfall-24h">
+                            --
+                        </strong>
+
+                        <small>
+                            mm
+                        </small>
+
+                    </div>
+
+
+                    <div class="rainfall-item">
+
+                        <span>
+                            LAST 3 DAYS
+                        </span>
+
+                        <strong id="rainfall-3day">
+                            --
+                        </strong>
+
+                        <small>
+                            mm
+                        </small>
+
+                    </div>
+
+
+                    <div class="rainfall-item">
+
+                        <span>
+                            LAST 7 DAYS
+                        </span>
+
+                        <strong id="rainfall-7day">
+                            --
+                        </strong>
+
+                        <small>
+                            mm
+                        </small>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- =============================================
+                 WARNING SIGNAL ENGINE
+                 ============================================= -->
+
+            <div class="card warning-engine">
+
+                <span class="card-label">
+                    WARNING SIGNAL ENGINE
+                </span>
+
+
+                <h2>
+                    Combined monitoring view
+                </h2>
+
+
+                <p>
+                    The prototype combines AI susceptibility with
+                    recent rainfall information to provide a
+                    location-specific monitoring status.
+                </p>
+
+
+                <!-- STATUS -->
+
+                <div
+                    id="engine-status"
+                    class="engine-status engine-neutral"
+                >
+
+                    <div class="engine-icon">
+                        ◉
+                    </div>
+
+
+                    <div>
+
+                        <strong id="engine-status-title">
+                            NO ASSESSMENT
+                        </strong>
+
+
+                        <span id="engine-status-text">
+                            Select a location to evaluate monitoring
+                            signals.
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- SIGNAL TABLE -->
+
+                <div class="engine-table">
+
+
+                    <div class="engine-row">
+
+                        <span>
+                            AI Susceptibility
+                        </span>
+
+
+                        <strong id="engine-risk">
+                            --
+                        </strong>
+
+
+                        <b
+                            id="engine-risk-status"
+                            class="signal-neutral"
+                        >
+                            --
+                        </b>
+
+                    </div>
+
+
+                    <div class="engine-row">
+
+                        <span>
+                            Rainfall · 24h
+                        </span>
+
+
+                        <strong id="engine-rain24">
+                            --
+                        </strong>
+
+
+                        <b
+                            id="engine-rain24-status"
+                            class="signal-neutral"
+                        >
+                            --
+                        </b>
+
+                    </div>
+
+
+                    <div class="engine-row">
+
+                        <span>
+                            Rainfall · 3 days
+                        </span>
+
+
+                        <strong id="engine-rain3">
+                            --
+                        </strong>
+
+
+                        <b
+                            id="engine-rain3-status"
+                            class="signal-neutral"
+                        >
+                            --
+                        </b>
+
+                    </div>
+
+
+                    <div class="engine-row">
+
+                        <span>
+                            Rainfall · 7 days
+                        </span>
+
+
+                        <strong id="engine-rain7">
+                            --
+                        </strong>
+
+
+                        <b
+                            id="engine-rain7-status"
+                            class="signal-neutral"
+                        >
+                            --
+                        </b>
+
+                    </div>
+
+                </div>
+
+
+                <div class="engine-note">
+
+                    <strong>
+                        Prototype monitoring status
+                    </strong>
+
+
+                    <span>
+                        Rainfall bands shown here are visual monitoring
+                        bands, not validated emergency trigger thresholds.
+                    </span>
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+        <!-- =================================================
+             RIGHT COLUMN
+             ================================================= -->
+
+<!-- =================================================
+     RIGHT COLUMN
+     ================================================= -->
+
+<aside>
+
+
+    <!-- =============================================
+         AI SUSCEPTIBILITY
+         ============================================= -->
+
+    <div class="card">
+
+        <span class="card-label">
+            AI SUSCEPTIBILITY
+        </span>
+
+        <h2 id="risk-value">
+            --
+        </h2>
+
+        <p id="risk-level">
+            No assessment available.
+        </p>
+
+
+        <div class="info-list">
+
+            <div class="info-row">
+                <span>MODEL</span>
+                <strong>Random Forest</strong>
+            </div>
+
+            <div class="info-row">
+                <span>REGION</span>
+                <strong>Northeast India</strong>
+            </div>
+
+            <div class="info-row">
+                <span>WEATHER</span>
+                <strong>Open-Meteo</strong>
+            </div>
+
+            <div class="info-row">
+                <span>ELEVATION</span>
+                <strong id="elevation">--</strong>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =============================================
+         RISK & RAINFALL VISUAL
+         ============================================= -->
+
+    <div class="card signal-chart-card">
+
+        <span class="card-label">
+            RISK & RAINFALL SIGNALS
+        </span>
+
+        <h2>
+            Environmental signal profile
+        </h2>
+
+        <p class="chart-description">
+            Current susceptibility and recent rainfall
+            indicators for the selected location.
+        </p>
+
+
+        <div class="visual-chart">
+
+
+            <!-- AI SUSCEPTIBILITY -->
+
+            <div class="chart-row">
+
+                <div class="chart-label">
+                    <span>
+                        AI Susceptibility
+                    </span>
+
+                    <strong id="chart-risk-value">
+                        --
+                    </strong>
+                </div>
+
+                <div class="chart-track">
+
+                    <div
+                        id="chart-risk-bar"
+                        class="chart-bar risk-bar"
+                        style="width: 0%;"
+                    ></div>
+
+                </div>
+
+            </div>
+
+
+            <!-- 24 HOUR -->
+
+            <div class="chart-row">
+
+                <div class="chart-label">
+                    <span>
+                        Rainfall · 24h
+                    </span>
+
+                    <strong id="chart-rain24-value">
+                        --
+                    </strong>
+                </div>
+
+                <div class="chart-track">
+
+                    <div
+                        id="chart-rain24-bar"
+                        class="chart-bar rain-bar"
+                        style="width: 0%;"
+                    ></div>
+
+                </div>
+
+            </div>
+
+
+            <!-- 3 DAYS -->
+
+            <div class="chart-row">
+
+                <div class="chart-label">
+                    <span>
+                        Rainfall · 3 days
+                    </span>
+
+                    <strong id="chart-rain3-value">
+                        --
+                    </strong>
+                </div>
+
+                <div class="chart-track">
+
+                    <div
+                        id="chart-rain3-bar"
+                        class="chart-bar rain-bar"
+                        style="width: 0%;"
+                    ></div>
+
+                </div>
+
+            </div>
+
+
+            <!-- 7 DAYS -->
+
+            <div class="chart-row">
+
+                <div class="chart-label">
+                    <span>
+                        Rainfall · 7 days
+                    </span>
+
+                    <strong id="chart-rain7-value">
+                        --
+                    </strong>
+                </div>
+
+                <div class="chart-track">
+
+                    <div
+                        id="chart-rain7-bar"
+                        class="chart-bar rain-bar"
+                        style="width: 0%;"
+                    ></div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="chart-scale">
+
+            <span>0</span>
+
+            <span>Low</span>
+
+            <span>Elevated</span>
+
+            <span>High</span>
+
+        </div>
+
+
+        <div class="chart-note">
+            Rainfall bars are normalized for visual comparison
+            and are not emergency trigger thresholds.
+        </div>
+
+    </div>
+
+
+    <!-- =============================================
+         ENVIRONMENTAL CONTEXT
+         ============================================= -->
+
+    <div class="card">
+
+        <span class="card-label">
+            ENVIRONMENTAL CONTEXT
+        </span>
+
+
+        <div class="info-list">
+
+            <div class="info-row">
+                <span>SLOPE</span>
+                <strong id="slope">--</strong>
+            </div>
+
+            <div class="info-row">
+                <span>ASPECT</span>
+                <strong id="aspect">--</strong>
+            </div>
+
+            <div class="info-row">
+                <span>ANNUAL RAINFALL</span>
+                <strong id="annual-rainfall">--</strong>
+            </div>
+
+            <div class="info-row">
+                <span>SOIL pH</span>
+                <strong id="soil-ph">--</strong>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =============================================
+         IMPORTANT NOTE
+         ============================================= -->
+
+    <div class="disclaimer">
+
+        <strong>
+            Important:
+        </strong>
+
+        The current prototype provides a
+        susceptibility assessment combined with
+        live rainfall monitoring. An operational
+        early-warning service requires validated
+        rainfall/soil-moisture trigger thresholds,
+        forecasting, uncertainty calibration and
+        an alert-delivery system.
+
+    </div>
+
+
+</aside>
+
+
+    </section>
+
+
+    <!-- =====================================================
+         FOOTER
+         ===================================================== -->
+
+    <footer class="footer">
+
+        LandslideGuard · NER-focused landslide
+        monitoring prototype
+
+    </footer>
+
+
+</main>
+<!-- Early Warning Loading Overlay -->
+<div id="ew-loader" class="ew-loader">
+    <div class="ew-loader-box">
+
+        <div class="ew-loader-spinner"></div>
+
+        <div class="ew-loader-title">
+            ANALYZING LOCATION
+        </div>
+
+        <div class="ew-loader-text">
+            Retrieving environmental data and live rainfall...
+        </div>
+
+        <div class="ew-loader-progress">
+            <div class="ew-loader-progress-bar"></div>
+        </div>
+
+        <div class="ew-loader-status">
+            AI MODEL PROCESSING
+        </div>
+
+    </div>
+</div>
+
+
+<script src="{{ url_for('static', filename='early-warning.js') }}"></script>
+
+</body>
+</html>

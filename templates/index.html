@@ -1,0 +1,826 @@
+<!doctype html>
+<html lang="en">
+
+    <head>
+
+        <meta charset="utf-8">
+
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1">
+
+        <title>
+            LandslideGuard | AI Risk Monitoring
+        </title>
+
+        <link
+            rel="stylesheet"
+            href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+        <link
+            rel="stylesheet"
+            href="{{ url_for('static', filename='index.css') }}">
+
+    </head>
+
+    <body class="landslideguard-dashboard">
+
+        <!-- ======================================================
+     NAVBAR
+====================================================== -->
+
+        <nav class="nav">
+
+            <a class="brand" href="/">
+                ◈ Landslide<span>Guard</span>
+            </a>
+
+            <!-- Desktop navigation -->
+            <div class="nav-links" id="navLinks">
+                <a href="/" class="active">Dashboard</a>
+                <a href="/early-warning">Early Warning</a>
+                <a href="/sources">Data Sources</a>
+                <a href="/about">About</a>
+            </div>
+
+            <div class="nav-right">
+
+                <span class="live">
+                    ● AI MONITORING
+                </span>
+
+                <button id="about">
+                    How it works
+                </button>
+
+            </div>
+
+            <!-- Mobile menu button -->
+            <button class="menu-btn" id="menuBtn">
+                ☰
+            </button>
+
+        </nav>
+
+        <main id="dashboard">
+
+            <main id="dashboard">
+
+                <!-- ======================================================
+            HERO
+            ====================================================== -->
+
+                <section class="hero">
+
+                    <div class="eyebrow">
+                        ● NORTHEAST INDIA LANDSLIDE INTELLIGENCE
+                    </div>
+
+                    <h1>
+                        Assess landslide
+                        <br>
+                        <span>
+                            susceptibility before disaster.
+                        </span>
+                    </h1>
+
+                    <p>
+                        Search for a place or click inside the highlighted
+                        Northeast India region to generate a machine-learning
+                        based landslide susceptibility assessment.
+                    </p>
+
+                </section>
+
+                <!-- ======================================================
+            SEARCH
+            ====================================================== -->
+
+                <section class="search">
+
+                    <span>⌕</span>
+
+                    <input
+                        id="location-search"
+                        type="text"
+                        placeholder="Search Northeast India — e.g. Shillong, Sikkim, Nagaland">
+
+                    <button id="search-button">
+                        Search
+                    </button>
+
+                </section>
+
+                <div id="search-status">
+                    Tip: search for a Northeast India location or click inside
+                    the highlighted region.
+                </div>
+
+                <!-- ======================================================
+            MAIN GRID
+            ====================================================== -->
+
+                <section class="grid">
+
+                    <!-- ======================================================
+                MAP
+                ====================================================== -->
+
+                    <div id="lg-map-column">
+
+                        <div class="map-card" id="risk-map">
+
+                            <div class="top">
+
+                                <div>
+
+                                    <small>
+                                        GEOSPATIAL MONITOR
+                                    </small>
+
+                                    <h2>
+                                        Northeast India Risk Map
+                                    </h2>
+
+                                </div>
+
+                                <label>
+                                    📍 Click inside the highlighted region
+                                </label>
+
+                            </div>
+
+                            <div id="map"></div>
+
+                            <div class="legend">
+
+                                <span>
+                                    ● Low
+                                </span>
+
+                                <span>
+                                    ● Moderate
+                                </span>
+
+                                <span>
+                                    ● High
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                        <!-- ======================================================
+                    DYNAMIC RAINFALL
+                    ====================================================== -->
+
+                        <section id="dynamic-rainfall-card">
+
+                            <div class="lg-rainfall-header">
+
+                                <div>
+
+                                    <span class="lg-rainfall-label">
+                                        DYNAMIC RAINFALL
+                                    </span>
+
+                                    <h3>
+                                        Live Rainfall Used by AI Model
+                                    </h3>
+
+                                </div>
+
+                                <div class="lg-rainfall-live">
+                                    ● LIVE
+                                </div>
+
+                            </div>
+
+                            <div class="lg-rainfall-grid">
+
+                                <div class="lg-rainfall-item">
+
+                                    <span>
+                                        LAST 24 HOURS
+                                    </span>
+
+                                    <div>
+
+                                        <strong id="dynamic-rainfall-24h">
+                                            --
+                                        </strong>
+
+                                        <small>
+                                            mm
+                                        </small>
+
+                                    </div>
+
+                                </div>
+
+                                <div class="lg-rainfall-item">
+
+                                    <span>
+                                        LAST 3 DAYS
+                                    </span>
+
+                                    <div>
+
+                                        <strong id="dynamic-rainfall-3day">
+                                            --
+                                        </strong>
+
+                                        <small>
+                                            mm
+                                        </small>
+
+                                    </div>
+
+                                </div>
+
+                                <div class="lg-rainfall-item">
+
+                                    <span>
+                                        LAST 7 DAYS
+                                    </span>
+
+                                    <div>
+
+                                        <strong id="dynamic-rainfall-7day">
+                                            --
+                                        </strong>
+
+                                        <small>
+                                            mm
+                                        </small>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="lg-rainfall-source">
+
+                                Source: Open-Meteo · Live rainfall conditions
+                                supplied to the Random Forest model.
+
+                            </div>
+
+                        </section>
+
+                    </div>
+
+                    <!-- ======================================================
+                RIGHT PANEL
+                ====================================================== -->
+
+                    <aside>
+
+                        <!-- ======================================================
+                    SELECTED LOCATION
+                    ====================================================== -->
+
+                        <div class="card">
+
+                            <small>
+                                SELECTED LOCATION
+                            </small>
+
+                            <h3 id="location-name">
+                                No location selected
+                            </h3>
+
+                            <div class="coords">
+
+                                <div>
+
+                                    <small>
+                                        STATE
+                                    </small>
+
+                                    <strong id="state-name">
+                                        --
+                                    </strong>
+
+                                </div>
+
+                                <div>
+
+                                    <small>
+                                        LATITUDE
+                                    </small>
+
+                                    <strong id="latitude">
+                                        --
+                                    </strong>
+
+                                </div>
+
+                                <div>
+
+                                    <small>
+                                        LONGITUDE
+                                    </small>
+
+                                    <strong id="longitude">
+                                        --
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <!-- ======================================================
+                    RISK CARD
+                    ====================================================== -->
+
+                        <div class="card risk">
+
+                            <small>
+                                AI RISK ASSESSMENT
+                            </small>
+
+                            <div
+                                id="gauge"
+                                class="gauge">
+
+                                <div>
+
+                                    <strong id="risk-value">
+                                        --
+                                    </strong>
+
+                                    <span>
+                                        %
+                                    </span>
+
+                                    <small>
+                                        RISK SCORE
+                                    </small>
+
+                                </div>
+
+                            </div>
+
+                            <b
+                                id="risk-level"
+                                class="neutral">
+
+                                SELECT A LOCATION
+
+                            </b>
+
+                            <div
+                                id="warning"
+                                class="warning warning-neutral">
+
+                                Awaiting location analysis
+
+                            </div>
+
+                        </div>
+
+                        <!-- ======================================================
+                    RISK ANALYSIS
+                    ====================================================== -->
+
+                        <div class="card">
+
+                            <small>
+                                RISK ANALYSIS
+                            </small>
+
+                            <h3 id="analysis-title">
+                                Ready for assessment
+                            </h3>
+
+                            <p id="analysis-text">
+
+                                Search for a supported Northeast India location
+                                or click inside the highlighted region.
+
+                            </p>
+
+                            <div id="reasons"></div>
+
+                        </div>
+
+                        <!-- ======================================================
+                    ENVIRONMENT
+                    ====================================================== -->
+
+                        <div
+                            id="environment-card"
+                            class="card environment-card">
+
+                            <small>
+                                ENVIRONMENTAL CONDITIONS
+                            </small>
+
+                            <h3>
+                                Model Input Data
+                            </h3>
+
+                            <p>
+
+                                Environmental values retrieved from the nearest
+                                available dataset point and supplied to the
+                                Random Forest model.
+
+                            </p>
+
+                            <div class="environment-grid">
+
+                                <div class="environment-item">
+
+                                    <span>
+                                        Elevation
+                                    </span>
+
+                                    <strong id="env-elevation">
+                                        --
+                                    </strong>
+
+                                    <small>
+                                        meters
+                                    </small>
+
+                                </div>
+
+                                <div class="environment-item">
+
+                                    <span>
+                                        Slope
+                                    </span>
+
+                                    <strong id="env-slope">
+                                        --
+                                    </strong>
+
+                                    <small>
+                                        degrees
+                                    </small>
+
+                                </div>
+
+                                <div class="environment-item">
+
+                                    <span>
+                                        Aspect
+                                    </span>
+
+                                    <strong id="env-aspect">
+                                        --
+                                    </strong>
+
+                                    <small>
+                                        degrees
+                                    </small>
+
+                                </div>
+
+                                <div class="environment-item">
+
+                                    <span>
+                                        Annual Rainfall
+                                    </span>
+
+                                    <strong id="env-rainfall">
+                                        --
+                                    </strong>
+
+                                    <small>
+                                        mm/year
+                                    </small>
+
+                                </div>
+
+                                <div class="environment-item">
+
+                                    <span>
+                                        Soil Clay
+                                    </span>
+
+                                    <strong id="env-clay">
+                                        --
+                                    </strong>
+
+                                    <small>
+                                        %
+                                    </small>
+
+                                </div>
+
+                                <div class="environment-item">
+
+                                    <span>
+                                        Soil Sand
+                                    </span>
+
+                                    <strong id="env-sand">
+                                        --
+                                    </strong>
+
+                                    <small>
+                                        %
+                                    </small>
+
+                                </div>
+
+                                <div class="environment-item">
+
+                                    <span>
+                                        Soil pH
+                                    </span>
+
+                                    <strong id="env-ph">
+                                        --
+                                    </strong>
+
+                                    <small>
+                                        pH
+                                    </small>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </aside>
+
+                </section>
+
+                <!-- ======================================================
+            STATS
+            ====================================================== -->
+
+                <section class="stats">
+
+                    <div>
+
+                        🌍
+
+                        <b>
+                            8 States
+                        </b>
+
+                        <small>
+                            Northeast India
+                        </small>
+
+                    </div>
+
+                    <div>
+
+                        🤖
+
+                        <b>
+                            Random Forest
+                        </b>
+
+                        <small>
+                            ML engine
+                        </small>
+
+                    </div>
+
+                    <div>
+
+                        ⚡
+
+                        <b>
+                            Instant
+                        </b>
+
+                        <small>
+                            Assessment
+                        </small>
+
+                    </div>
+
+                    <div>
+
+                        📍
+
+                        <b>
+                            Search + Click
+                        </b>
+
+                        <small>
+                            Two input methods
+                        </small>
+
+                    </div>
+
+                </section>
+
+                <!-- ======================================================
+            WORKFLOW
+            ====================================================== -->
+
+                <section class="workflow">
+
+                    <small>
+                        SYSTEM WORKFLOW
+                    </small>
+
+                    <h2>
+                        From location to susceptibility level
+                    </h2>
+
+                    <div class="steps">
+
+                        <div>
+
+                            <b>
+                                01
+                            </b>
+
+                            <h3>
+                                Locate
+                            </h3>
+
+                            <p>
+                                Search or select a point inside
+                                Northeast India.
+                            </p>
+
+                        </div>
+
+                        <div class="arrow">
+                            →
+                        </div>
+
+                        <div>
+
+                            <b>
+                                02
+                            </b>
+
+                            <h3>
+                                Environment
+                            </h3>
+
+                            <p>
+                                Retrieve the nearest environmental
+                                dataset point.
+                            </p>
+
+                        </div>
+
+                        <div class="arrow">
+                            →
+                        </div>
+
+                        <div>
+
+                            <b>
+                                03
+                            </b>
+
+                            <h3>
+                                Random Forest
+                            </h3>
+
+                            <p>
+                                Decision trees estimate
+                                susceptibility.
+                            </p>
+
+                        </div>
+
+                        <div class="arrow">
+                            →
+                        </div>
+
+                        <div>
+
+                            <b>
+                                04
+                            </b>
+
+                            <h3>
+                                Decision
+                            </h3>
+
+                            <p>
+                                Threshold converts the model score into a
+                                susceptibility level.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+            </main>
+
+            <!-- ======================================================
+        FOOTER
+        ====================================================== -->
+
+            <footer>
+
+                Global LandslideGuard · AI + GIS for landslide
+                risk assessment · SIH Prototype
+
+            </footer>
+
+            <!-- ======================================================
+        HOW IT WORKS MODAL
+        ====================================================== -->
+
+            <div
+                id="modal"
+                class="modal hidden">
+
+                <div class="modal-box">
+
+                    <button id="close">
+                        ×
+                    </button>
+
+                    <small>
+                        HOW IT WORKS
+                    </small>
+
+                    <h2>
+                        AI + GIS in one workflow
+                    </h2>
+
+                    <p>
+
+                        The browser sends selected coordinates to Flask.
+                        Flask first checks whether the location belongs to
+                        one of the eight supported Northeast Indian states.
+
+                    </p>
+
+                    <p>
+
+                        For supported locations, Flask retrieves the nearest
+                        environmental dataset point and sends the required
+                        features to the saved Random Forest model.
+
+                    </p>
+
+                    <p>
+
+                        <b>
+                            Stack:
+                        </b>
+
+                        Python · Flask · Scikit-learn · Random Forest ·
+                        Leaflet · OpenStreetMap · GeoJSON
+
+                    </p>
+
+                </div>
+
+            </div>
+
+            <!-- ======================================================
+        SCRIPTS
+        ====================================================== -->
+
+            <script
+                src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+        </script>
+
+            <script
+                src="{{ url_for('static', filename='index.js') }}">
+        </script>
+
+            <!-- Prediction Loading Overlay -->
+            <div id="prediction-loader" class="prediction-loader">
+                <div class="loader-box">
+
+                    <div class="loader-spinner"></div>
+
+                    <div class="loader-title">
+                        ANALYZING LOCATION
+                    </div>
+
+                    <div class="loader-text">
+                        Retrieving environmental data and live rainfall...
+                    </div>
+
+                    <div class="loader-progress">
+                        <div class="loader-progress-bar"></div>
+                    </div>
+
+                    <div class="loader-status">
+                        AI MODEL PROCESSING
+                    </div>
+
+                </div>
+            </div>
+
+        </body>
+
+    </html>
