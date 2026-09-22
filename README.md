@@ -1,4 +1,4 @@
-# Global LandslideGuard — Final SIH Prototype
+# NER LandslideGuard — Final SIH Prototype
 
 ## Setup
 1. Put your trained `landslide_model.pkl` in `models/`.
