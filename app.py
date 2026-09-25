@@ -1844,51 +1844,6 @@ def ner_states():
 # INDIA GEOJSON
 # ============================================================
 
-@app.route("/india-states")
-def india_states():
-
-    return Response(
-
-        json.dumps(
-
-            india_geojson,
-
-            ensure_ascii=False,
-
-            separators=(
-                ",",
-                ":"
-            )
-
-        ),
-
-        status=200,
-
-        mimetype=
-            "application/geo+json",
-
-        headers={
-
-            "Cache-Control":
-                "public, max-age=3600"
-
-        }
-
-    )
-
-
-# ============================================================
-# SERVER-SIDE LOCATION SEARCH
-# ============================================================
-#
-# Kept for compatibility with older frontend versions.
-#
-# The updated dashboard / Early Warning frontend can use
-# browser-side Nominatim directly, which avoids Render IP
-# rate limiting.
-#
-# ============================================================
-
 @app.route(
     "/search-location",
     methods=["POST"]
@@ -1902,7 +1857,6 @@ def search_location():
         or {}
     )
 
-
     query = str(
         data.get(
             "location",
@@ -1910,93 +1864,71 @@ def search_location():
         )
     ).strip()
 
-
     if not query:
-
         return jsonify({
-
             "error":
                 "Enter a location to search."
-
         }), 400
-
 
     try:
 
-        response = HTTP.get(
-
+        response = requests.get(
             "https://nominatim.openstreetmap.org/search",
 
             params={
-
-                "q":
-                    query,
-
-                "format":
-                    "jsonv2",
-
-                "addressdetails":
-                    1,
-
-                "limit":
-                    1,
-
-                "countrycodes":
-                    "in"
-
+                "q": query,
+                "format": "jsonv2",
+                "limit": 1,
+                "addressdetails": 1
             },
 
-            timeout=(
-                4,
-                10
-            )
-        )
+            headers={
+                "User-Agent":
+                    "LandslideGuard/1.0 "
+                    "(educational disaster-management project)",
+                "Accept":
+                    "application/json",
+                "Accept-Language":
+                    "en"
+            },
 
+            timeout=20
+        )
 
         response.raise_for_status()
 
-
         results = response.json()
 
-
         if not results:
-
             return jsonify({
-
                 "error":
                     f'No location found for "{query}".'
-
             }), 404
-
 
         result = results[0]
 
-
-        lat = float(
+        latitude = float(
             result["lat"]
         )
 
-
-        lon = float(
+        longitude = float(
             result["lon"]
         )
 
-
         supported, state = (
             is_supported_location(
-                lat,
-                lon
+                latitude,
+                longitude
             )
         )
-
 
         return jsonify({
 
             "latitude":
-                lat,
+                latitude,
 
             "longitude":
-                lon,
+                longitude,
 
             "display_name":
                 result.get(
@@ -2012,54 +1944,40 @@ def search_location():
 
         })
 
-
     except requests.Timeout:
 
-        return jsonify({
-
-            "error":
-                "Location search timed out. "
-                "Please try again."
-
-        }), 503
-
-
-    except requests.RequestException as exc:
-
         print(
-            "Nominatim search error:",
-            repr(exc)
+            "Nominatim location search timed out."
         )
 
-
         return jsonify({
-
             "error":
-                "Location search is temporarily "
-                "unavailable. Please try again."
-
+                "Location search timed out. Please try again."
         }), 503
 
-
-    except (
-        KeyError,
-        TypeError,
-        ValueError
-    ) as exc:
+    except requests.RequestException as error:
 
         print(
-            "Location response error:",
-            repr(exc)
+            "Nominatim location search error:",
+            repr(error)
         )
 
+        return jsonify({
+            "error":
+                "Location search is temporarily unavailable."
+        }), 503
+
+    except (KeyError, TypeError, ValueError) as error:
+
+        print(
+            "Location response parsing error:",
+            repr(error)
+        )
 
         return jsonify({
-
             "error":
-                "Invalid location response received."
-
+                "Invalid location data received."
         }), 502
-
 
 # ============================================================
 # PREDICTION
