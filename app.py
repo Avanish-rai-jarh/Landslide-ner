@@ -1844,165 +1844,84 @@ def ner_states():
 # INDIA GEOJSON
 # ============================================================
 
-@app.route("/india-states")
-def india_states():
-
-    return Response(
-
-        json.dumps(
-
-            india_geojson,
-
-            ensure_ascii=False,
-
-            separators=(
-                ",",
-                ":"
-            )
-
-        ),
-
-        status=200,
-
-        mimetype=
-            "application/geo+json",
-
-        headers={
-
-            "Cache-Control":
-                "public, max-age=3600"
-
-        }
-
-    )
-
-
-# ============================================================
-# SERVER-SIDE LOCATION SEARCH
-# ============================================================
-#
-# Kept for compatibility with older frontend versions.
-#
-# The updated dashboard / Early Warning frontend can use
-# browser-side Nominatim directly, which avoids Render IP
-# rate limiting.
-#
-# ============================================================
-
-@app.route(
-    "/search-location",
-    methods=["POST"]
-)
+@app.route("/search-location", methods=["POST"])
 def search_location():
 
-    data = (
-        request.get_json(
-            silent=True
-        )
-        or {}
-    )
-
+    data = request.get_json(silent=True) or {}
 
     query = str(
-        data.get(
-            "location",
-            ""
-        )
+        data.get("location", "")
     ).strip()
 
-
     if not query:
-
         return jsonify({
-
-            "error":
-                "Enter a location to search."
-
+            "error": "Enter a location to search."
         }), 400
-
 
     try:
 
         response = HTTP.get(
-
-            "https://nominatim.openstreetmap.org/search",
-
+            "https://geocoding-api.open-meteo.com/v1/search",
             params={
-
-                "q":
-                    query,
-
-                "format":
-                    "jsonv2",
-
-                "addressdetails":
-                    1,
-
-                "limit":
-                    1,
-
-                "countrycodes":
-                    "in"
-
+                "name": query,
+                "count": 1,
+                "language": "en",
+                "format": "json",
+                "countryCode": "IN"
             },
-
-            timeout=(
-                4,
-                10
-            )
+            timeout=(5, 15)
         )
-
 
         response.raise_for_status()
 
+        data = response.json()
 
-        results = response.json()
-
+        results = data.get("results", [])
 
         if not results:
-
             return jsonify({
-
-                "error":
-                    f'No location found for "{query}".'
-
+                "error": f'No location found for "{query}".'
             }), 404
-
 
         result = results[0]
 
+        lat = float(result["latitude"])
+        lon = float(result["longitude"])
 
-        lat = float(
-            result["lat"]
+        supported, state = is_supported_location(
+            lat,
+            lon
         )
 
+        display_parts = []
 
-        lon = float(
-            result["lon"]
-        )
-
-
-        supported, state = (
-            is_supported_location(
-                lat,
-                lon
+        if result.get("name"):
+            display_parts.append(
+                result["name"]
             )
-        )
 
+        if result.get("admin1"):
+            display_parts.append(
+                result["admin1"]
+            )
+
+        if result.get("country"):
+            display_parts.append(
+                result["country"]
+            )
+
+        display_name = ", ".join(
+            dict.fromkeys(display_parts)
+        )
 
         return jsonify({
 
-            "latitude":
-                lat,
+            "latitude": lat,
 
-            "longitude":
-                lon,
+            "longitude": lon,
 
             "display_name":
-                result.get(
-                    "display_name",
-                    query
-                ),
+                display_name or query,
 
             "state":
                 state,
@@ -2012,34 +1931,31 @@ def search_location():
 
         })
 
+    except requests.Timeout as exc:
 
-    except requests.Timeout:
+        print(
+            "Open-Meteo geocoding timeout:",
+            repr(exc)
+        )
 
         return jsonify({
-
             "error":
                 "Location search timed out. "
                 "Please try again."
-
         }), 503
-
 
     except requests.RequestException as exc:
 
         print(
-            "Nominatim search error:",
+            "Open-Meteo geocoding error:",
             repr(exc)
         )
 
-
         return jsonify({
-
             "error":
                 "Location search is temporarily "
                 "unavailable. Please try again."
-
         }), 503
-
 
     except (
         KeyError,
@@ -2052,15 +1968,10 @@ def search_location():
             repr(exc)
         )
 
-
         return jsonify({
-
             "error":
                 "Invalid location response received."
-
         }), 502
-
-
 
 # ============================================================
 # PREDICTION
